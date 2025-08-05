@@ -27,25 +27,39 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Sample API endpoint
-app.get('/api/hello', (req, res) => {
-  res.json({ 
-    message: 'Hello from the Geo Web App API!',
-    timestamp: new Date().toISOString()
-  });
-});
+// Questions API endpoint
+app.post('/api/questions', (req, res) => {
+  try {
+    const { brandNames, brandWebsites, productsServices, targetRegions, competitorBrands } = req.body;
 
-// Sample geo endpoint
-app.get('/api/geo/location', (req, res) => {
-  res.json({
-    location: {
-      latitude: 37.7749,
-      longitude: -122.4194,
-      city: 'San Francisco',
-      country: 'USA'
-    },
-    timestamp: new Date().toISOString()
-  });
+    // Validate required fields
+    if (!brandNames || !Array.isArray(brandNames)) {
+      return res.status(400).json({ error: '品牌名稱是必需的' });
+    }
+
+    // Hardcoded questions as requested
+    const questions = [
+      {
+        id: '1',
+        question: '台北有哪些 SEO 公司口碑佳，成功把客戶關鍵字從第 3 頁拉到首頁？'
+      },
+      {
+        id: '2', 
+        question: '排名一直卡在第二頁，台北哪幾家 SEO 公司最擅長解決這種瓶頸？'
+      }
+    ];
+
+    return res.json({
+      questions,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error in /api/questions:', error);
+    return res.status(500).json({ 
+      error: '處理請求時發生錯誤',
+      message: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : 'Internal server error'
+    });
+  }
 });
 
 // Error handling middleware
@@ -65,5 +79,4 @@ app.use('*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`🌍 API endpoint: http://localhost:${PORT}/api/hello`);
 }); 
