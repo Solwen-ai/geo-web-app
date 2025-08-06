@@ -1,7 +1,11 @@
+import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+
+// Load environment variables
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -57,6 +61,44 @@ app.post('/api/questions', (req, res) => {
     console.error('Error in /api/questions:', error);
     return res.status(500).json({ 
       error: '處理請求時發生錯誤',
+      message: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : 'Internal server error'
+    });
+  }
+});
+
+// Start scraping endpoint
+app.post('/api/start-scraping', async (req, res) => {
+  try {
+    const { exec } = await import('child_process');
+    const { promisify } = await import('util');
+    const execAsync = promisify(exec);
+
+    console.log('🚀 Starting Playwright script...');
+    
+    // Execute the Playwright script
+    const { stdout, stderr } = await execAsync('npx --yes tsx playwright/grabTheThings.ts', {
+      cwd: process.cwd(),
+      env: process.env
+    });
+
+    if (stderr) {
+      console.error('Playwright stderr:', stderr);
+    }
+
+    if (stdout) {
+      console.log('Playwright stdout:', stdout);
+    }
+
+    console.log('✅ Playwright script executed successfully');
+    
+    return res.json({
+      message: 'Playwright script executed successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error executing Playwright script:', error);
+    return res.status(500).json({
+      error: 'Failed to execute Playwright script',
       message: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : 'Internal server error'
     });
   }
