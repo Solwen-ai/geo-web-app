@@ -43,3 +43,6 @@ Thumbs.db
 # Temporary folders
 tmp/
 temp/ 
+
+# Browser data (contains sensitive login information)
+browser-data/

@@ -7,6 +7,7 @@ import fs from 'fs';
 import { login } from './login';
 import dotenv from 'dotenv';
 import { exportToCSV } from './csvExporter';
+import { Page } from 'playwright';
 
 // Load environment variables from .env.local
 dotenv.config({ path: '.env.local' });
@@ -55,7 +56,8 @@ async function main() {
   }));
 
   // Launch browser with stealth
-  const browser = await chromium.launch({
+  const context = await chromium.launchPersistentContext('./browser-data', {
+  // const browser = await chromium.launch({
     headless: false,
     args: [
       '--disable-blink-features=AutomationControlled',
@@ -70,10 +72,7 @@ async function main() {
     ignoreDefaultArgs: ['--enable-automation'],
   });
 
-  const context = await browser.newContext();
-  let page = await context.newPage();
-
-  await login(page);
+  let page: Page;
 
   try {
     // Loop through all questions
@@ -84,8 +83,7 @@ async function main() {
       outputRecord.query = question;
 
       console.log(
-        `\n🔄 Processing question ${i + 1}/${
-          questions.length
+        `\n🔄 Processing question ${i + 1}/${ questions.length
         }: ${question.substring(0, 50)}...`
       );
 
@@ -129,7 +127,7 @@ async function main() {
   } catch (error) {
     console.error('❌ Fatal error:', error);
   } finally {
-    await browser.close();
+    await context.close();
   }
 }
 
