@@ -57,7 +57,6 @@ async function main() {
 
   // Launch browser with stealth
   const context = await chromium.launchPersistentContext('./browser-data', {
-  // const browser = await chromium.launch({
     headless: false,
     args: [
       '--disable-blink-features=AutomationControlled',
