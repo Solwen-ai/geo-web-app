@@ -2,17 +2,19 @@ export type OutputRecord = {
   no: number;
   query: string;
   aio: string;
-  aioBrandCompare: boolean;
-  aioBrandExist: boolean;
+  aioBrandCompare: string;
+  aioBrandExist: string;
   chatgpt: string;
-  chatgptOfficialWebsiteExist: boolean;
+  chatgptOfficialWebsiteExist: string;
   chatgptReference: string;
-  chatgptBrandCompare: boolean;
-  chatgptBrandExist: boolean;
+  chatgptBrandCompare: string;
+  chatgptBrandExist: string;
   brandRelated: string;
   contentAnalysis: string;
   optimizeDirection: string;
   answerEngine: string;
+  // Dynamic brand presence properties will be added here
+  [key: string]: any; // Allow dynamic brand properties
 };
 
 // Type definitions for AiOverview

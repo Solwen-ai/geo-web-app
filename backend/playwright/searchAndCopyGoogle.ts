@@ -151,14 +151,14 @@ const searchAndCopyGoogle = async ({
     if (result.ai_overview) {
       const markdownContent = convertToMarkdown(result.ai_overview);
       outputRecord.aio = markdownContent;
-      outputRecord.aioBrandCompare = calculateAioBrandCompare(markdownContent);
-      outputRecord.aioBrandExist = calculateAioBrandExist(markdownContent);
+      outputRecord.aioBrandCompare = calculateAioBrandCompare(markdownContent) ? '是' : '否';
+      outputRecord.aioBrandExist = calculateAioBrandExist(markdownContent) ? '有' : '無';
       
       console.log("✅ Found AI overview from Google");
     } else {
       outputRecord.aio = "No AI overview found";
-      outputRecord.aioBrandCompare = false;
-      outputRecord.aioBrandExist = false;
+      outputRecord.aioBrandCompare = '否';
+      outputRecord.aioBrandExist = '無';
       console.log("⚠️ No AI overview available");
     }
     

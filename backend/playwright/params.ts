@@ -5,9 +5,11 @@ export const brandWebsites = ['https://welly.tw'];
 export const productServices = 'SEO';
 export const targetRegions = 'Taiwan';
 export const competitorBrands = [
-  '零一行銷',
-  'Awoo 阿物科技',
+  '零一',
+  'Awoo',
+  '阿物',
   '集客數據行銷',
-  'Ranking 震豪',
+  'Ranking',
+  '震豪',
   'MTMG SEO',
 ];

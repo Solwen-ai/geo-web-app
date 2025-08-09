@@ -1,6 +1,7 @@
 import { BrowserContext, Page } from "playwright";
 import { OutputRecord } from "./types";
 import { delay } from "./utils";
+import { brandNames, brandWebsites, competitorBrands } from "./params";
 
 const enableWebSearch = async (page: Page) => {
   try {
@@ -55,6 +56,92 @@ const copyAnswer = async (page: Page, context: BrowserContext): Promise<string> 
   return clipboardText;
 };
 
+// Function to check if answerText contains brandWebsites
+const checkChatgptOfficialWebsiteExist = (answerText: string): boolean => {
+  if (!answerText) {
+    return false;
+  }
+  
+  return brandWebsites.some(website => 
+    answerText.toLowerCase().includes(website.toLowerCase())
+  );
+};
+
+// Function to extract references from answerText
+const extractChatgptReferences = (answerText: string): string => {
+  if (!answerText) {
+    return '';
+  }
+  
+  // Look for reference patterns like [1]: https://... "title"
+  const referenceRegex = /\[\d+\]:\s*(https?:\/\/[^\s]+)\s*"([^"]+)"/g;
+  const references: string[] = [];
+  let match;
+  
+  while ((match = referenceRegex.exec(answerText)) !== null) {
+    references.push(match[0]);
+  }
+  
+  return references.join('\n');
+};
+
+// Function to check brand existence in text (same as in searchAndCopyGoogle)
+const checkBrandExistenceInText = (text: string, brandNames: string[]): number => {
+  if (!text) {
+    return 0;
+  }
+  
+  let matchCount = 0;
+  for (const brandName of brandNames) {
+    if (text.toLowerCase().includes(brandName.toLowerCase())) {
+      matchCount++;
+    }
+  }
+  
+  return matchCount;
+};
+
+// Function to calculate chatgptBrandCompare (same as aioBrandCompare)
+const calculateChatgptBrandCompare = (answerText: string): boolean => {
+  if (!answerText) {
+    return false;
+  }
+  
+  // for own brand, we only need to check if it exists
+  const brandNamesCount = checkBrandExistenceInText(answerText, brandNames) > 0 ? 1 : 0;
+  const competitorBrandsCount = checkBrandExistenceInText(answerText, competitorBrands);
+  const matchCount = brandNamesCount + competitorBrandsCount;
+  
+  return matchCount >= 2;
+};
+
+// Function to calculate chatgptBrandExist (same as aioBrandExist)
+const calculateChatgptBrandExist = (answerText: string): boolean => {
+  if (!answerText) {
+    return false;
+  }
+  
+  return checkBrandExistenceInText(answerText, brandNames) > 0;
+};
+
+// Function to build brand presence matrix for a question
+const buildBrandPresenceMatrix = (answerText: string): Record<string, number> => {
+  const matrix: Record<string, number> = {};
+  
+  // Check which brands appear in the answer text
+  if (answerText) {
+    [...brandNames, ...competitorBrands].forEach(brand => {
+      if (answerText.toLowerCase().includes(brand.toLowerCase())) {
+        matrix[brand] = 1;
+      } else {
+        matrix[brand] = 0;
+      }
+    });
+  }
+  
+  return matrix;
+};
+
 const searchAndCopy = async ({
   context,
   page,
@@ -79,6 +166,17 @@ const searchAndCopy = async ({
     // 4. Copy the answer
     const answerText = await copyAnswer(page, context);
     outputRecord.chatgpt = answerText;
+    
+    // 5. Fill in the additional properties
+    outputRecord.chatgptOfficialWebsiteExist = checkChatgptOfficialWebsiteExist(answerText) ? '有' : '無';
+    outputRecord.chatgptReference = extractChatgptReferences(answerText);
+    outputRecord.chatgptBrandCompare = calculateChatgptBrandCompare(answerText) ? '是' : '否';
+    outputRecord.chatgptBrandExist = calculateChatgptBrandExist(answerText) ? '有' : '無';
+    outputRecord.answerEngine = "ChatGPT 5 + search";
+    
+    // 6. Build and assign brand presence matrix
+    const brandMatrix = buildBrandPresenceMatrix(answerText);
+    Object.assign(outputRecord, brandMatrix);
 
   } catch (error) {
     console.error("❌ Error:", error.message);

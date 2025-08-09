@@ -1,7 +1,9 @@
 import fs from 'fs/promises';
 import { OutputRecord } from './types';
+import { brandNames, competitorBrands } from './params';
 
-const headers = [
+// Base headers (excluding dynamic brand columns)
+const baseHeaders = [
   'no',
   'query',
   'aio',
@@ -17,7 +19,8 @@ const headers = [
   'optimizeDirection',
   'answerEngine',
 ];
-const headerTitles = [
+
+const baseHeaderTitles = [
   'NO.',
   'QUERY',
   'AIO（僅一部分有）',
@@ -35,15 +38,30 @@ const headerTitles = [
 ];
 
 /**
- * Converts OutputRecord array to CSV format
+ * Gets all unique brand names for CSV headers
+ * @returns Array of all brand names
+ */
+const getAllBrandNames = (): string[] => {
+  return [...brandNames, ...competitorBrands];
+};
+
+/**
+ * Converts OutputRecord array to CSV format with dynamic brand columns
  * @param records Array of OutputRecord objects
  * @returns CSV string
  */
 export const convertToCSV = (records: OutputRecord[]): string => {
-  const csvRows = [headerTitles.join(',')];
+  // Get all brand names for dynamic columns
+  const brandNames = getAllBrandNames();
+  
+  // Combine base headers with brand columns
+  const allHeaders = [...baseHeaders, ...brandNames];
+  const allHeaderTitles = [...baseHeaderTitles, ...brandNames];
+  
+  const csvRows = [allHeaderTitles.join(',')];
 
   records.forEach(record => {
-    const row = headers.map(header => {
+    const row = allHeaders.map(header => {
       const value = record[header as keyof OutputRecord];
       // Escape commas and quotes in CSV
       const escapedValue = String(value || '').replace(/"/g, '""');
@@ -68,6 +86,7 @@ export const exportToCSV = async (
   try {
     const csvContent = convertToCSV(records);
     await fs.writeFile(filePath, csvContent, 'utf-8');
+    
     console.log(
       `✅ Successfully exported ${records.length} records to ${filePath}`
     );
