@@ -10,7 +10,7 @@
     "start": "node dist/index.js",
     "clean": "rm -rf dist",
     "grab": "npx --yes tsx playwright/grabTheThings.ts",
-    "login": "npx --yes tsx playwright/login.ts"
+    "manual": "npx --yes tsx playwright/login.ts"
   },
   "keywords": [
     "api",

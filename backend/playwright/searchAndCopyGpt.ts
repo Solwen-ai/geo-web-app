@@ -8,6 +8,8 @@ const enableWebSearch = async (page: Page) => {
     await page.waitForSelector(inputSelector, { timeout: 15000 });
     await page.click(inputSelector);
     await page.type(inputSelector, '/search', { delay: 50 });
+    // wait for Web Search option to show up
+    await delay(1);
     await page.keyboard.press("Enter");
     
     console.log("✅ Typed '/search' to enable web search");
@@ -20,7 +22,7 @@ const askQuestion = async (page: Page, question: string) => {
   const inputSelector = 'div#prompt-textarea[contenteditable="true"]';
   await page.waitForSelector(inputSelector, { timeout: 15000 });
   await page.click(inputSelector);
-  await page.type(inputSelector, question, { delay: 50 });
+  await page.type(inputSelector, question, { delay: 100 });
   await page.keyboard.press("Enter");
   
   console.log("✅ Asked question:", question.substring(0, 50) + "...");
@@ -40,9 +42,11 @@ const copyAnswer = async (page: Page, context: BrowserContext): Promise<string> 
   const copyButton = await page.locator(editButtonSelector).first().locator('xpath=preceding-sibling::button').first();
   await copyButton.waitFor({ timeout: 10000 });
   await copyButton.click();
+  await delay(1);
+  // not sure why, but it's working fine when click twice...
+  await copyButton.click();
 
   // Read the clipboard
-  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   const clipboardText = await page.evaluate(async () => {
     return await navigator.clipboard.readText();
   });
@@ -66,13 +70,13 @@ const searchAndCopy = async ({
     // 1. Navigate to ChatGPT
     await page.goto("https://chatgpt.com");
 
-    // 1.5. Enable web search
+    // 2. Enable web search
     await enableWebSearch(page);
 
-    // 2. Ask the question
+    // 3. Ask the question
     await askQuestion(page, question);
 
-    // 3. Copy the answer
+    // 4. Copy the answer
     const answerText = await copyAnswer(page, context);
     outputRecord.chatgpt = answerText;
 

@@ -4,10 +4,10 @@ import searchAndCopyGpt from './searchAndCopyGpt';
 import searchAndCopyGoogle from './searchAndCopyGoogle';
 import { OutputRecord } from './types';
 import fs from 'fs';
-import { login } from './login';
 import dotenv from 'dotenv';
 import { exportToCSV } from './csvExporter';
 import { Page } from 'playwright';
+import { delay } from './utils';
 
 // Load environment variables from .env.local
 dotenv.config({ path: '.env.local' });
@@ -69,6 +69,7 @@ async function main() {
       '--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
     ],
     ignoreDefaultArgs: ['--enable-automation'],
+    permissions: ['clipboard-read', 'clipboard-write'],
   });
 
   let page: Page;
@@ -108,7 +109,7 @@ async function main() {
 
         // Add a small delay between requests to avoid rate limiting
         if (i < questions.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await delay(2);
         }
       } catch (error) {
         console.error(`❌ Error processing question ${i + 1}:`, error.message);
