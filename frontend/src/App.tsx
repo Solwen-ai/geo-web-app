@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { DynamicInput } from './components/DynamicInput';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { QuestionList } from './components/QuestionList';
 import { useQuestions } from './hooks/useQuestions';
@@ -10,11 +9,11 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   const [formData, setFormData] = useState<FormData>({
-    brandNames: [''],
-    brandWebsites: [''],
+    brandNames: '',
+    brandWebsites: '',
     productsServices: '',
     targetRegions: '',
-    competitorBrands: [''],
+    competitorBrands: '',
   });
 
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -25,18 +24,9 @@ const AppContent = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
-    // Filter out empty values
-    const filteredData: FormData = {
-      brandNames: formData.brandNames.filter(name => name.trim() !== ''),
-      brandWebsites: formData.brandWebsites.filter(website => website.trim() !== ''),
-      productsServices: formData.productsServices,
-      targetRegions: formData.targetRegions,
-      competitorBrands: formData.competitorBrands.filter(competitor => competitor.trim() !== ''),
-    };
 
     try {
-      const response = await questionsMutation.mutateAsync(filteredData);
+      const response = await questionsMutation.mutateAsync(formData);
       setQuestions(response.questions);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : '提交失敗，請稍後再試';
@@ -53,60 +43,81 @@ const AppContent = () => {
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Multi-column layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Left Column */}
-              <div className="space-y-6">
-                <DynamicInput
-                  label="品牌名稱"
-                  values={formData.brandNames}
-                  onChange={(values) => setFormData({ ...formData, brandNames: values })}
-                  placeholder="請輸入品牌名稱"
+            {/* 3 rows x 2 columns Grid layout - each input is one row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 grid-rows-3 gap-6">
+              {/* Row 1 */}
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">
+                  品牌名稱
+                </label>
+                <input
+                  type="text"
+                  value={formData.brandNames}
+                  onChange={(e) => setFormData({ ...formData, brandNames: e.target.value })}
+                  placeholder="請輸入品牌名稱，用逗號分隔多個品牌"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-
-                <DynamicInput
-                  label="品牌網站"
-                  values={formData.brandWebsites}
-                  onChange={(values) => setFormData({ ...formData, brandWebsites: values })}
-                  placeholder="請輸入品牌網站"
-                />
-
-                <div className="space-y-3">
-                  <label className="block text-sm font-medium text-gray-700">
-                    品牌要推的產品/服務
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.productsServices}
-                    onChange={(e) => setFormData({ ...formData, productsServices: e.target.value })}
-                    placeholder="請輸入產品或服務"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
+                <p className="text-sm text-gray-500">例如：Welly SEO, 偉利科技</p>
               </div>
 
-              {/* Right Column */}
-              <div className="space-y-6">
-                <div className="space-y-3">
-                  <label className="block text-sm font-medium text-gray-700">
-                    品牌要推的地區
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.targetRegions}
-                    onChange={(e) => setFormData({ ...formData, targetRegions: e.target.value })}
-                    placeholder="請輸入目標地區"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">
+                  品牌網站
+                </label>
+                <input
+                  type="text"
+                  value={formData.brandWebsites}
+                  onChange={(e) => setFormData({ ...formData, brandWebsites: e.target.value })}
+                  placeholder="請輸入品牌網站，用逗號分隔多個網站"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p className="text-sm text-gray-500">例如：https://welly.tw, https://example.com</p>
+              </div>
 
-                <DynamicInput
-                  label="競爭對手品牌"
-                  values={formData.competitorBrands}
-                  onChange={(values) => setFormData({ ...formData, competitorBrands: values })}
-                  placeholder="請輸入競爭對手品牌"
+              {/* Row 2 */}
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">
+                  品牌要推的產品/服務
+                </label>
+                <input
+                  type="text"
+                  value={formData.productsServices}
+                  onChange={(e) => setFormData({ ...formData, productsServices: e.target.value })}
+                  placeholder="請輸入產品或服務"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
+
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">
+                  品牌要推的地區
+                </label>
+                <input
+                  type="text"
+                  value={formData.targetRegions}
+                  onChange={(e) => setFormData({ ...formData, targetRegions: e.target.value })}
+                  placeholder="請輸入目標地區"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Row 3 */}
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">
+                  競爭對手品牌
+                </label>
+                <input
+                  type="text"
+                  value={formData.competitorBrands}
+                  onChange={(e) => setFormData({ ...formData, competitorBrands: e.target.value })}
+                  placeholder="請輸入競爭對手品牌，用逗號分隔多個品牌"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p className="text-sm text-gray-500">例如：零一行銷, Awoo 阿物科技, 集客數據行銷</p>
+              </div>
+
+              {/* Empty cell for Row 3, Column 2 */}
+              <div></div>
             </div>
 
             {/* Error Message */}

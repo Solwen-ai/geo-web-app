@@ -8,11 +8,11 @@ export interface QuestionsResponse {
 }
 
 export interface FormData {
-  brandNames: string[];
-  brandWebsites: string[];
+  brandNames: string;
+  brandWebsites: string;
   productsServices: string;
   targetRegions: string;
-  competitorBrands: string[];
+  competitorBrands: string;
 }
 
 export interface ApiError {

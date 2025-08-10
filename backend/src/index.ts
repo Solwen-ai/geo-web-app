@@ -3,9 +3,15 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Load environment variables
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -31,27 +37,113 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Questions API endpoint
-app.post('/api/questions', (req, res) => {
+// Function to save req.body to params.ts
+const saveToParamsFile = async (data: any) => {
   try {
-    const { brandNames, brandWebsites, productsServices, targetRegions, competitorBrands } = req.body;
+    const paramsContent = `// Auto-generated from frontend input
+export const brandNames = ${JSON.stringify(data.brandNames.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0))};
+export const brandWebsites = ${JSON.stringify(data.brandWebsites.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0))};
+export const productServices = '${data.productsServices}';
+export const targetRegions = '${data.targetRegions}';
+export const competitorBrands = ${JSON.stringify(data.competitorBrands.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0))};
+`;
 
-    // Validate required fields
-    if (!brandNames || !Array.isArray(brandNames)) {
-      return res.status(400).json({ error: '品牌名稱是必需的' });
+    const paramsPath = path.join(__dirname, '../playwright/params.ts');
+    await fs.writeFile(paramsPath, paramsContent, 'utf-8');
+    console.log('✅ Successfully saved params.ts');
+  } catch (error) {
+    console.error('❌ Error saving params.ts:', error);
+    throw error;
+  }
+};
+
+
+
+// Function to generate questions using OpenAI API
+const generateQuestionsWithOpenAI = async (promptData: any): Promise<{id: string, question: string}[]> => {
+  try {
+    const openaiApiKey = process.env.OPENAI_API_KEY;
+    if (!openaiApiKey) {
+      throw new Error('OPENAI_API_KEY is not configured');
     }
 
-    // Hardcoded questions as requested
-    const questions = [
-      {
-        id: '1',
-        question: '台北有哪些 SEO 公司口碑佳，成功把客戶關鍵字從第 3 頁拉到首頁？'
+    const prompt = `Based on the following brand information, generate 100 SEO-related questions in Traditional Chinese that would be relevant for this brand:
+
+Brand Names: ${promptData.brandNames}
+Brand Websites: ${promptData.brandWebsites}
+Products/Services: ${promptData.productsServices}
+Target Regions: ${promptData.targetRegions}
+Competitor Brands: ${promptData.competitorBrands}
+
+Generate 100 questions that:
+1. Are relevant to SEO and digital marketing
+2. Focus on the target regions mentioned
+3. Consider the competitive landscape
+4. Are specific to the products/services offered
+5. Could help with keyword research and content strategy
+
+Return only the questions, one per line, without numbering or additional text.`;
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${openaiApiKey}`
       },
-      {
-        id: '2', 
-        question: '排名一直卡在第二頁，台北哪幾家 SEO 公司最擅長解決這種瓶頸？'
-      }
-    ];
+      body: JSON.stringify({
+        model: 'gpt-4',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an SEO expert who generates relevant questions for brand research and keyword analysis.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 4000,
+        temperature: 0.7
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`OpenAI API error: ${errorData.error?.message || response.statusText}`);
+    }
+
+    const data = await response.json();
+    const questionsText = data.choices[0]?.message?.content || '';
+    
+    // Split the response into individual questions and clean them
+    const questions = questionsText
+      .split('\n')
+      .map((q: string) => q.trim())
+      .filter((q: string) => q.length > 0 && !q.match(/^\d+\./)) // Remove numbering
+      .slice(0, 100) // Ensure we get exactly 100 questions
+      .map((question: string, index: number) => ({
+        id: (index + 1).toString(),
+        question: question
+      }));
+
+    console.log(`✅ Generated ${questions.length} questions using OpenAI`);
+    return questions;
+  } catch (error) {
+    console.error('❌ Error generating questions with OpenAI:', error);
+    throw error;
+  }
+};
+
+// Questions API endpoint
+app.post('/api/questions', async (req, res) => {
+  try {
+    console.log('🚀 req.body', req.body);
+
+    // Save the data to params.ts
+    await saveToParamsFile(req.body);
+
+    // Generate questions using OpenAI
+    const questions = await generateQuestionsWithOpenAI(req.body);
 
     return res.json({
       questions,
