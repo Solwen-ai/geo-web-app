@@ -22,6 +22,69 @@ interface InitScrapingResponse {
   timestamp: string;
 }
 
+// SSE clients management
+let sseClients: express.Response[] = [];
+
+// Shared scraping function
+const runScraping = async (): Promise<void> => {
+  try {
+    const { exec } = await import('child_process');
+    const { promisify } = await import('util');
+    const execAsync = promisify(exec);
+
+    console.log('🚀 Starting Playwright script...');
+    
+    // Notify all SSE clients that scraping has started
+    sseClients.forEach(client => {
+      client.write(`data: ${JSON.stringify({ 
+        type: 'scraping_started',
+        message: 'Scraping process has started',
+        timestamp: new Date().toISOString()
+      })}\n\n`);
+    });
+    
+    // Execute the Playwright script
+    const { stdout, stderr } = await execAsync('npx --yes tsx playwright/grabTheThings.ts', {
+      cwd: process.cwd(),
+      env: process.env
+    });
+
+    if (stderr) {
+      console.error('Playwright stderr:', stderr);
+    }
+
+    if (stdout) {
+      console.log('Playwright stdout:', stdout);
+    }
+
+    console.log('✅ Playwright script executed successfully');
+    
+    // Notify all SSE clients that scraping has completed
+    sseClients.forEach(client => {
+      client.write(`data: ${JSON.stringify({ 
+        type: 'scraping_completed',
+        message: 'Scraping process has completed successfully',
+        timestamp: new Date().toISOString()
+      })}\n\n`);
+    });
+    
+  } catch (error) {
+    console.error('Error executing Playwright script:', error);
+    
+    // Notify all SSE clients that scraping has failed
+    sseClients.forEach(client => {
+      client.write(`data: ${JSON.stringify({ 
+        type: 'scraping_error',
+        message: 'Scraping process has failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      })}\n\n`);
+    });
+    
+    throw error;
+  }
+};
+
 // Load environment variables
 dotenv.config();
 
@@ -173,7 +236,51 @@ app.post('/api/questions', async (req, res) => {
   }
 });
 
-// Init scraping endpoint - save questions to file
+// Server-Sent Events endpoint
+app.get('/api/sse', (req, res) => {
+  // Set headers for SSE
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Cache-Control'
+  });
+
+  console.log('🔗 SSE connection established');
+
+  // Add client to the list
+  sseClients.push(res);
+
+  // Send initial connection message
+  res.write(`data: ${JSON.stringify({ 
+    type: 'connection_established',
+    message: 'SSE connection established', 
+    timestamp: new Date().toISOString() 
+  })}\n\n`);
+
+  // Handle client disconnect
+  req.on('close', () => {
+    console.log('🔌 SSE connection closed');
+    // Remove client from the list
+    const index = sseClients.indexOf(res);
+    if (index > -1) {
+      sseClients.splice(index, 1);
+    }
+  });
+
+  // Handle server shutdown
+  req.on('error', (error) => {
+    console.error('❌ SSE connection error:', error);
+    // Remove client from the list
+    const index = sseClients.indexOf(res);
+    if (index > -1) {
+      sseClients.splice(index, 1);
+    }
+  });
+});
+
+// Init scraping endpoint - save questions to file and start scraping asynchronously
 app.post('/api/init-scraping', async (req: express.Request<{}, InitScrapingResponse, InitScrapingRequest>, res: express.Response<InitScrapingResponse>) => {
   try {
     const { questions } = req.body;
@@ -193,8 +300,13 @@ app.post('/api/init-scraping', async (req: express.Request<{}, InitScrapingRespo
     
     console.log(`✅ Successfully saved ${questions.length} questions to questions.txt`);
     
+    // Start scraping asynchronously (don't wait for it to complete)
+    runScraping().catch(error => {
+      console.error('❌ Background scraping failed:', error);
+    });
+    
     return res.json({
-      message: `Successfully saved ${questions.length} questions to questions.txt`,
+      message: `Successfully saved ${questions.length} questions to questions.txt and started scraping process`,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
@@ -209,27 +321,7 @@ app.post('/api/init-scraping', async (req: express.Request<{}, InitScrapingRespo
 // Start scraping endpoint
 app.post('/api/start-scraping', async (req, res) => {
   try {
-    const { exec } = await import('child_process');
-    const { promisify } = await import('util');
-    const execAsync = promisify(exec);
-
-    console.log('🚀 Starting Playwright script...');
-    
-    // Execute the Playwright script
-    const { stdout, stderr } = await execAsync('npx --yes tsx playwright/grabTheThings.ts', {
-      cwd: process.cwd(),
-      env: process.env
-    });
-
-    if (stderr) {
-      console.error('Playwright stderr:', stderr);
-    }
-
-    if (stdout) {
-      console.log('Playwright stdout:', stdout);
-    }
-
-    console.log('✅ Playwright script executed successfully');
+    await runScraping();
     
     return res.json({
       message: 'Playwright script executed successfully',
