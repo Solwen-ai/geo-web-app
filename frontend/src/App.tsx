@@ -3,23 +3,25 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { QuestionList } from './components/QuestionList';
 import { useQuestions } from './hooks/useQuestions';
+import { useInitScraping } from './hooks/useInitScraping';
 import type { FormData, Question } from './types/api';
 
 const queryClient = new QueryClient();
 
 const AppContent = () => {
   const [formData, setFormData] = useState<FormData>({
-    brandNames: '',
-    brandWebsites: '',
-    productsServices: '',
-    targetRegions: '',
-    competitorBrands: '',
+    brandNames: 'welly,偉利',
+    brandWebsites: 'welly.tw',
+    productsServices: 'seo',
+    targetRegions: 'taiwan',
+    competitorBrands: 'awoo,阿物,零一,ranking,mtmg',
   });
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [error, setError] = useState<string>('');
 
   const questionsMutation = useQuestions();
+  const initScrapingMutation = useInitScraping();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +32,23 @@ const AppContent = () => {
       setQuestions(response.questions);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : '提交失敗，請稍後再試';
+      setError(errorMessage);
+    }
+  };
+
+  const handleInitScraping = async () => {
+    if (questions.length === 0) {
+      setError('請先生成問題');
+      return;
+    }
+
+    setError('');
+
+    try {
+      await initScrapingMutation.mutateAsync(questions);
+      alert('問題已成功儲存到 questions.txt');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : '儲存問題失敗，請稍後再試';
       setError(errorMessage);
     }
   };
@@ -149,7 +168,28 @@ const AppContent = () => {
           {/* Results */}
           {questions.length > 0 && (
             <div className="mt-8 pt-8 border-t border-gray-200">
-              <QuestionList questions={questions} />
+              <QuestionList 
+                questions={questions} 
+                onQuestionsChange={setQuestions}
+              />
+              
+              {/* Init Scraping Button */}
+              <div className="mt-6 flex justify-center">
+                <button
+                  onClick={handleInitScraping}
+                  disabled={initScrapingMutation.isPending}
+                  className="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                >
+                  {initScrapingMutation.isPending ? (
+                    <>
+                      <LoadingSpinner size="sm" />
+                      <span>儲存中...</span>
+                    </>
+                  ) : (
+                    <span>開始產生 GEO 文件</span>
+                  )}
+                </button>
+              </div>
             </div>
           )}
         </div>

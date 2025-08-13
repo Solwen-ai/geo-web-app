@@ -7,6 +7,21 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// TypeScript interfaces
+interface Question {
+  id: string;
+  question: string;
+}
+
+interface InitScrapingRequest {
+  questions: Question[];
+}
+
+interface InitScrapingResponse {
+  message: string;
+  timestamp: string;
+}
+
 // Load environment variables
 dotenv.config();
 
@@ -67,7 +82,7 @@ const generateQuestionsWithOpenAI = async (promptData: any): Promise<{id: string
       throw new Error('OPENAI_API_KEY is not configured');
     }
 
-    const prompt = `Based on the following brand information, generate 100 SEO-related questions in Traditional Chinese that would be relevant for this brand:
+    const prompt = `Based on the following brand information, generate 10 SEO-related questions in Traditional Chinese that would be relevant for this brand:
 
 Brand Names: ${promptData.brandNames}
 Brand Websites: ${promptData.brandWebsites}
@@ -75,7 +90,7 @@ Products/Services: ${promptData.productsServices}
 Target Regions: ${promptData.targetRegions}
 Competitor Brands: ${promptData.competitorBrands}
 
-Generate 100 questions that:
+Generate 10 questions that:
 1. Are relevant to SEO and digital marketing
 2. Focus on the target regions mentioned
 3. Consider the competitive landscape
@@ -155,6 +170,39 @@ app.post('/api/questions', async (req, res) => {
       error: '處理請求時發生錯誤',
       message: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : 'Internal server error'
     });
+  }
+});
+
+// Init scraping endpoint - save questions to file
+app.post('/api/init-scraping', async (req: express.Request<{}, InitScrapingResponse, InitScrapingRequest>, res: express.Response<InitScrapingResponse>) => {
+  try {
+    const { questions } = req.body;
+    
+    if (!questions || !Array.isArray(questions)) {
+      return res.status(400).json({ error: 'Questions array is required' } as any);
+    }
+
+    // Convert questions to text format
+    const questionsText = questions
+      .map((q: Question) => q.question)
+      .join('\n');
+
+    // Save to questions.txt file
+    const questionsPath = path.join(__dirname, '../playwright/questions.txt');
+    await fs.writeFile(questionsPath, questionsText, 'utf-8');
+    
+    console.log(`✅ Successfully saved ${questions.length} questions to questions.txt`);
+    
+    return res.json({
+      message: `Successfully saved ${questions.length} questions to questions.txt`,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error saving questions to file:', error);
+    return res.status(500).json({
+      error: 'Failed to save questions to file',
+      message: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : 'Internal server error'
+    } as any);
   }
 });
 
