@@ -2,6 +2,35 @@ import { getJson } from "serpapi";
 import { AiOverview, OutputRecord } from "./types";
 import { brandNames, competitorBrands } from "./params";
 
+// Retry mechanism with exponential backoff
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 2000
+): Promise<T> {
+  let lastError: Error;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      
+      if (attempt === maxRetries) {
+        console.log(`❌ All ${maxRetries + 1} attempts failed. Final error:`, lastError.message);
+        throw lastError;
+      }
+      
+      const delay = baseDelay * Math.pow(2, attempt);
+      console.log(`⚠️ Attempt ${attempt + 1} failed. Retrying in ${delay}ms... Error:`, lastError.message);
+      
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError!;
+}
+
 // Convert ai_overview text_blocks to markdown format
 function convertToMarkdown(aiOverview: AiOverview): string {
   if (!aiOverview || !aiOverview.text_blocks) {
@@ -97,35 +126,44 @@ function calculateAioBrandExist(aiOverviewText: string): boolean {
   return checkBrandExistenceInText(aiOverviewText, brandNames) > 0;
 }
 
-// Make SerpAPI call with pagination handling
+// Make SerpAPI call with pagination handling and retry mechanism
 async function getSerpApiResult(query: string): Promise<{ ai_overview?: AiOverview; error?: string }> {
   try {
-    const json = await getJson({
-      q: query,
-      api_key: process.env.SERPAPI_KEY,
-      location_requested: "Taipei, Taiwan",
-      location_used: "Taipei,Taiwan",
-      google_domain: "google.com.tw",
-      hl: "zh-tw",
-      gl: "tw"
+    // Initial API call with retry mechanism
+    const json = await retryWithBackoff(async () => {
+      const result = await getJson({
+        q: query,
+        api_key: process.env.SERPAPI_KEY,
+        location_requested: "Taipei, Taiwan",
+        location_used: "Taipei,Taiwan",
+        google_domain: "google.com.tw",
+        hl: "zh-tw",
+        gl: "tw"
+      });
+      
+      if (result.error) {
+        throw new Error(`SerpAPI error: ${result.error}`);
+      }
+      
+      return result;
     });
-    
-    if (json.error) {
-      throw new Error(`SerpAPI error: ${json.error}`);
-    }
     
     // Check if ai_overview needs pagination
     if (json.ai_overview && json.ai_overview.page_token) {
-      // Make second API call for pagination
-      const paginationJson = await getJson({
-        engine: "google_ai_overview",
-        api_key: process.env.SERPAPI_KEY,
-        page_token: json.ai_overview.page_token
+      // Make second API call for pagination with retry mechanism
+      const paginationJson = await retryWithBackoff(async () => {
+        const result = await getJson({
+          engine: "google_ai_overview",
+          api_key: process.env.SERPAPI_KEY,
+          page_token: json.ai_overview.page_token
+        });
+        
+        if (result.error) {
+          throw new Error(`SerpAPI pagination error: ${result.error}`);
+        }
+        
+        return result;
       });
-      
-      if (paginationJson.error) {
-        throw new Error(`SerpAPI pagination error: ${paginationJson.error}`);
-      }
       
       return paginationJson;
     }
