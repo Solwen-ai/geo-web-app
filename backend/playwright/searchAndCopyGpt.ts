@@ -50,17 +50,17 @@ const askQuestion = async (page: Page, question: string) => {
 };
 
 const copyAnswer = async (page: Page, context: BrowserContext): Promise<string> => {
-  // Wait for the response and find the copy button (previous sibling of edit button)
-  const editButtonSelector = 'button[aria-label="Edit in canvas"]';
-  await page.waitForSelector(editButtonSelector, { timeout: 120000 });
+  // Wait for the response and find the copy button using data-testid
+  const copyButtonSelector = 'article[data-testid="conversation-turn-2"] button[data-testid="copy-turn-action-button"]';
+  await page.waitForSelector(copyButtonSelector, { timeout: 120000 });
   
   // Scroll to the bottom to ensure buttons are visible
   await page.evaluate(() => {
     window.scrollTo(0, document.body.scrollHeight);
   });
   
-  // Find the copy button (previous sibling of the edit button)
-  const copyButton = await page.locator(editButtonSelector).first().locator('xpath=preceding-sibling::button').first();
+  // Find and click the copy button
+  const copyButton = await page.locator(copyButtonSelector).first();
   await copyButton.waitFor({ timeout: 10000 });
   await copyButton.click();
   await delay(1);

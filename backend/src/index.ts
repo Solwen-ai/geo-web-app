@@ -166,11 +166,11 @@ const generateQuestionsWithOpenAI = async (promptData: any): Promise<{id: string
 5. 邏輯順暢，前後無衝突
 
 # 範例（勿複製）
-1. 台北哪幾位皮膚科醫師口碑最好又不用排隊排很久？
+台北哪幾位皮膚科醫師口碑最好又不用排隊排很久？
 
-# 輸出格式（一次輸出 20 題，嚴格遵守下方格式，不得加入其他文字或空行）
-1. 問題
-2. 問題
+# 輸出格式（一次輸出 5 題，嚴格遵守下方格式，不得加入其他文字或空行）
+問題
+問題
     `;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
