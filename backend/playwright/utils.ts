@@ -20,3 +20,31 @@ export const cleanupClipboard = async (page: any) => {
     console.log('⚠️ Clipboard cleanup failed:', error.message);
   }
 };
+
+export async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 2000
+): Promise<T> {
+  let lastError: Error;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      
+      if (attempt === maxRetries) {
+        console.log(`❌ All ${maxRetries + 1} attempts failed. Final error:`, lastError.message);
+        throw lastError;
+      }
+      
+      const delay = baseDelay * Math.pow(2, attempt);
+      console.log(`⚠️ Attempt ${attempt + 1} failed. Retrying in ${delay}ms... Error:`, lastError.message);
+      
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError!;
+}

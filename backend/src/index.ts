@@ -148,22 +148,30 @@ const generateQuestionsWithOpenAI = async (promptData: any): Promise<{id: string
       throw new Error('OPENAI_API_KEY is not configured');
     }
 
-    const prompt = `Based on the following brand information, generate 5 SEO-related questions in Traditional Chinese that would be relevant for this brand:
+    const prompt = `
+# 角色
+你是一位一般消費者，正尋找「${promptData.productsServices}」（例：離婚律師、植牙診所），目標地區「${promptData.targetRegions}」，準備在 Claude / ChatGPT（或其他 AI 對話工具）輸入問題。
 
-Brand Names: ${promptData.brandNames}
-Brand Websites: ${promptData.brandWebsites}
-Products/Services: ${promptData.productsServices}
-Target Regions: ${promptData.targetRegions}
-Competitor Brands: ${promptData.competitorBrands}
+# 變數
+行業╱專業類型：${promptData.productsServices}
+地點：${promptData.targetRegions}
+官網：${promptData.brandWebsites}
 
-Generate 5 questions that:
-1. Are relevant to SEO and digital marketing
-2. Focus on the target regions mentioned
-3. Consider the competitive landscape
-4. Are specific to the products/services offered
-5. Could help with keyword research and content strategy
+# 關鍵要求
+所有問題必須
+1. 明確詢問品牌╱機構╱專業人員名稱，沒有出現具體品牌╱機構╱專業人員名稱，會有推薦、哪些等用字
+2. 包含該領域消費者的常見痛點
+3. 貼近真實決策情境，不重複
+4. 符合一般民眾搜尋的提問方式，自然、口語化、符合台灣地區習慣
+5. 邏輯順暢，前後無衝突
 
-Return only the questions, one per line, without numbering or additional text.`;
+# 範例（勿複製）
+1. 台北哪幾位皮膚科醫師口碑最好又不用排隊排很久？
+
+# 輸出格式（一次輸出 20 題，嚴格遵守下方格式，不得加入其他文字或空行）
+1. 問題
+2. 問題
+    `;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -174,10 +182,10 @@ Return only the questions, one per line, without numbering or additional text.`;
       body: JSON.stringify({
         model: 'gpt-4',
         messages: [
-          {
-            role: 'system',
-            content: 'You are an SEO expert who generates relevant questions for brand research and keyword analysis.'
-          },
+          // {
+          //   role: 'system',
+          //   content: 'You are an SEO expert who generates relevant questions for brand research and keyword analysis.'
+          // },
           {
             role: 'user',
             content: prompt
