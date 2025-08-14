@@ -97,13 +97,11 @@ async function main() {
         
         console.log(`✅ Completed ChatGPT for question ${i + 1}`);
 
-        /*
         // Call Google search right after ChatGPT
         await searchAndCopyGoogle({
           question,
           outputRecord,
         });
-        */
 
         console.log(`✅ Completed Google search for question ${i + 1}`);
 

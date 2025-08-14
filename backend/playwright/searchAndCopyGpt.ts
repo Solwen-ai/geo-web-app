@@ -3,6 +3,26 @@ import { OutputRecord } from "./types";
 import { delay } from "./utils";
 import { brandNames, brandWebsites, competitorBrands } from "./params";
 
+const clearInput = async (page: Page) => {
+  try {
+    const inputSelector = 'div#prompt-textarea[contenteditable="true"]';
+    await page.waitForSelector(inputSelector, { timeout: 15000 });
+    await page.click(inputSelector);
+    
+    // Select all text using Cmd+A (Mac) or Ctrl+A (Windows/Linux)
+    await page.keyboard.press(process.platform === 'darwin' ? 'Meta+a' : 'Control+a');
+    await delay(0.5);
+    
+    // Delete selected text
+    await page.keyboard.press('Backspace');
+    await delay(0.5);
+    
+    console.log("✅ Cleared input field");
+  } catch (error) {
+    console.log("⚠️ Could not clear input field:", error.message);
+  }
+};
+
 const enableWebSearch = async (page: Page) => {
   try {
     const inputSelector = 'div#prompt-textarea[contenteditable="true"]';
@@ -156,6 +176,9 @@ const searchAndCopy = async ({
   try {
     // 1. Navigate to ChatGPT
     await page.goto("https://chatgpt.com");
+
+    // 1.5. Clear input field to ensure it's empty
+    await clearInput(page);
 
     // 2. Enable web search
     await enableWebSearch(page);

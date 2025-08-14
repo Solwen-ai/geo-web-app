@@ -59,11 +59,14 @@ const runScraping = async (): Promise<void> => {
 
     console.log('✅ Playwright script executed successfully');
     
+    const fileName = 'geo.csv';
+    
     // Notify all SSE clients that scraping has completed
     sseClients.forEach(client => {
       client.write(`data: ${JSON.stringify({ 
         type: 'scraping_completed',
         message: 'Scraping process has completed successfully',
+        fileName,
         timestamp: new Date().toISOString()
       })}\n\n`);
     });
@@ -145,7 +148,7 @@ const generateQuestionsWithOpenAI = async (promptData: any): Promise<{id: string
       throw new Error('OPENAI_API_KEY is not configured');
     }
 
-    const prompt = `Based on the following brand information, generate 10 SEO-related questions in Traditional Chinese that would be relevant for this brand:
+    const prompt = `Based on the following brand information, generate 5 SEO-related questions in Traditional Chinese that would be relevant for this brand:
 
 Brand Names: ${promptData.brandNames}
 Brand Websites: ${promptData.brandWebsites}
@@ -153,7 +156,7 @@ Products/Services: ${promptData.productsServices}
 Target Regions: ${promptData.targetRegions}
 Competitor Brands: ${promptData.competitorBrands}
 
-Generate 10 questions that:
+Generate 5 questions that:
 1. Are relevant to SEO and digital marketing
 2. Focus on the target regions mentioned
 3. Consider the competitive landscape
@@ -255,7 +258,6 @@ app.get('/api/sse', (req, res) => {
   // Send initial connection message
   res.write(`data: ${JSON.stringify({ 
     type: 'connection_established',
-    message: 'SSE connection established', 
     timestamp: new Date().toISOString() 
   })}\n\n`);
 
@@ -315,6 +317,35 @@ app.post('/api/init-scraping', async (req: express.Request<{}, InitScrapingRespo
       error: 'Failed to save questions to file',
       message: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : 'Internal server error'
     } as any);
+  }
+});
+
+// Download geo.csv endpoint
+app.get('/api/download/geo.csv', async (req, res) => {
+  try {
+    const geoFilePath = path.join(__dirname, '../geo.csv');
+    
+    // Check if file exists
+    try {
+      await fs.access(geoFilePath);
+    } catch (error) {
+      return res.status(404).json({ error: 'geo.csv file not found' });
+    }
+    
+    // Set headers for file download
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="geo.csv"');
+    
+    // Stream the file to the response
+    const fileStream = await fs.readFile(geoFilePath, 'utf-8');
+    console.log('📥 geo.csv file downloaded successfully');
+    return res.send(fileStream);
+  } catch (error) {
+    console.error('Error downloading geo.csv:', error);
+    return res.status(500).json({
+      error: 'Failed to download geo.csv file',
+      message: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : 'Internal server error'
+    });
   }
 });
 

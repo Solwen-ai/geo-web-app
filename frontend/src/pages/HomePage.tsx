@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { QuestionList } from '../components/QuestionList';
 import { useQuestions } from '../hooks/useQuestions';
@@ -6,6 +7,7 @@ import { useInitScraping } from '../hooks/useInitScraping';
 import type { FormData, Question } from '../types/api';
 
 export const HomePage = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<FormData>({
     brandNames: 'welly,偉利',
     brandWebsites: 'welly.tw',
@@ -28,7 +30,8 @@ export const HomePage = () => {
       const response = await questionsMutation.mutateAsync(formData);
       setQuestions(response.questions);
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : '提交失敗，請稍後再試';
+      const errorMessage =
+        err instanceof Error ? err.message : '提交失敗，請稍後再試';
       setError(errorMessage);
     }
   };
@@ -43,9 +46,11 @@ export const HomePage = () => {
 
     try {
       await initScrapingMutation.mutateAsync(questions);
-      alert('問題已成功儲存到 questions.txt');
+      // Navigate to report page after successful scraping initialization
+      navigate('/report');
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : '儲存問題失敗，請稍後再試';
+      const errorMessage =
+        err instanceof Error ? err.message : '儲存問題失敗，請稍後再試';
       setError(errorMessage);
     }
   };
@@ -69,11 +74,15 @@ export const HomePage = () => {
                 <input
                   type="text"
                   value={formData.brandNames}
-                  onChange={(e) => setFormData({ ...formData, brandNames: e.target.value })}
+                  onChange={e =>
+                    setFormData({ ...formData, brandNames: e.target.value })
+                  }
                   placeholder="請輸入品牌名稱，用逗號分隔多個品牌"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                <p className="text-sm text-gray-500">例如：Welly SEO, 偉利科技</p>
+                <p className="text-sm text-gray-500">
+                  例如：Welly SEO, 偉利科技
+                </p>
               </div>
 
               <div className="space-y-3">
@@ -83,11 +92,15 @@ export const HomePage = () => {
                 <input
                   type="text"
                   value={formData.brandWebsites}
-                  onChange={(e) => setFormData({ ...formData, brandWebsites: e.target.value })}
+                  onChange={e =>
+                    setFormData({ ...formData, brandWebsites: e.target.value })
+                  }
                   placeholder="請輸入品牌網站，用逗號分隔多個網站"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                <p className="text-sm text-gray-500">例如：https://welly.tw, https://example.com</p>
+                <p className="text-sm text-gray-500">
+                  例如：https://welly.tw, https://example.com
+                </p>
               </div>
 
               {/* Row 2 */}
@@ -98,7 +111,12 @@ export const HomePage = () => {
                 <input
                   type="text"
                   value={formData.productsServices}
-                  onChange={(e) => setFormData({ ...formData, productsServices: e.target.value })}
+                  onChange={e =>
+                    setFormData({
+                      ...formData,
+                      productsServices: e.target.value,
+                    })
+                  }
                   placeholder="請輸入產品或服務"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
@@ -111,7 +129,9 @@ export const HomePage = () => {
                 <input
                   type="text"
                   value={formData.targetRegions}
-                  onChange={(e) => setFormData({ ...formData, targetRegions: e.target.value })}
+                  onChange={e =>
+                    setFormData({ ...formData, targetRegions: e.target.value })
+                  }
                   placeholder="請輸入目標地區"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
@@ -125,11 +145,18 @@ export const HomePage = () => {
                 <input
                   type="text"
                   value={formData.competitorBrands}
-                  onChange={(e) => setFormData({ ...formData, competitorBrands: e.target.value })}
+                  onChange={e =>
+                    setFormData({
+                      ...formData,
+                      competitorBrands: e.target.value,
+                    })
+                  }
                   placeholder="請輸入競爭對手品牌，用逗號分隔多個品牌"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                <p className="text-sm text-gray-500">例如：零一行銷, Awoo 阿物科技, 集客數據行銷</p>
+                <p className="text-sm text-gray-500">
+                  例如：零一行銷, Awoo 阿物科技, 集客數據行銷
+                </p>
               </div>
 
               {/* Empty cell for Row 3, Column 2 */}
@@ -165,11 +192,11 @@ export const HomePage = () => {
           {/* Results */}
           {questions.length > 0 && (
             <div className="mt-8 pt-8 border-t border-gray-200">
-              <QuestionList 
-                questions={questions} 
+              <QuestionList
+                questions={questions}
                 onQuestionsChange={setQuestions}
               />
-              
+
               {/* Init Scraping Button */}
               <div className="mt-6 flex justify-center">
                 <button
@@ -183,7 +210,7 @@ export const HomePage = () => {
                       <span>儲存中...</span>
                     </>
                   ) : (
-                    <span>儲存問題到 questions.txt</span>
+                    <span>產生文件</span>
                   )}
                 </button>
               </div>
