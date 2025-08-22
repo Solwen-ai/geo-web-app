@@ -1,15 +1,7 @@
-// TODO: hard code for now
-// these have to come from frontend input
-export const brandNames = ['Welly SEO', '偉利科技'];
-export const brandWebsites = ['https://welly.tw'];
-export const productServices = 'SEO';
-export const targetRegions = 'Taiwan';
-export const competitorBrands = [
-  '零一',
-  'Awoo',
-  '阿物',
-  '集客數據行銷',
-  'Ranking',
-  '震豪',
-  'MTMG SEO',
-];
+// Auto-generated from frontend input
+export const brandNames = ["welly","偉利"];
+export const brandWebsites = ["welly.tw"];
+export const productServices = 'seo';
+export const targetRegions = 'taiwan';
+export const competitorBrands = ["awoo","阿物","零一","ranking","mtmg"];
+export const fileName = '202508220525.csv';

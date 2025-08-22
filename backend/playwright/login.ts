@@ -1,4 +1,7 @@
-import { chromium } from 'playwright';
+import { chromium } from 'playwright-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+
+chromium.use(StealthPlugin());
 
 export async function manualLogin() {
   const context = await chromium.launchPersistentContext('./browser-data', {
@@ -18,6 +21,10 @@ export async function manualLogin() {
   const page = await context.newPage();
 
   await page.goto("http://chatgpt.com/");
+  await page.waitForTimeout(10 * 1000);
+  await page.screenshot({ path: 'debug-login.png', fullPage: true });
+  await context.close();
+  // const storage = await context.storageState({ path: 'auth.json' });
 } 
 
 manualLogin();
