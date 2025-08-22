@@ -72,12 +72,9 @@ async function main() {
     permissions: ['clipboard-read', 'clipboard-write'],
   });
 
-  let page: Page;
-
   try {
     // Loop through all questions
     for (let i = 0; i < questions.length; i++) {
-      page = await context.newPage();
       const question = questions[i];
       const outputRecord = outputRecords[i];
       outputRecord.query = question;
@@ -90,7 +87,6 @@ async function main() {
       try {
         await searchAndCopyGpt({ 
           context, 
-          page, 
           question, 
           outputRecord 
         });
@@ -113,8 +109,6 @@ async function main() {
         console.error(`❌ Error processing question ${i + 1}:`, error.message);
         // Continue with next question instead of stopping
       }
-
-      await page.close();
     }
 
     // Export to CSV

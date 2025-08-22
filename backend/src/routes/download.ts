@@ -18,7 +18,7 @@ router.get('/:fileName', async (req, res) => {
       return res.status(400).json({ error: 'Invalid file name' });
     }
     
-    const filePath = path.join(__dirname, '../../..', fileName);
+    const filePath = path.join(process.cwd(), 'reports/', fileName);
     
     // Check if file exists
     if (!(await fileService.fileExists(filePath))) {

@@ -1,4 +1,5 @@
 import fs from 'fs/promises';
+import path from 'path';
 import { OutputRecord } from './types';
 import { brandNames, competitorBrands } from './params';
 
@@ -76,14 +77,27 @@ export const convertToCSV = (records: OutputRecord[]): string => {
 /**
  * Exports OutputRecord array to CSV file asynchronously
  * @param records Array of OutputRecord objects
- * @param filePath Path to the output CSV file (default: "geo.csv")
+ * @param fileName Name of the output CSV file (default: "geo.csv")
  * @returns Promise that resolves when file is written
  */
 export const exportToCSV = async (
   records: OutputRecord[],
-  filePath: string = 'geo.csv'
+  fileName: string = 'geo.csv'
 ): Promise<void> => {
   try {
+    // Create reports directory if it doesn't exist
+    const reportsDir = path.join(process.cwd(), 'reports');
+    try {
+      await fs.access(reportsDir);
+    } catch {
+      // Directory doesn't exist, create it
+      await fs.mkdir(reportsDir, { recursive: true });
+      console.log('📁 Created reports directory');
+    }
+
+    // Create full file path in reports directory
+    const filePath = path.join(reportsDir, fileName);
+    
     const csvContent = convertToCSV(records);
     await fs.writeFile(filePath, csvContent, 'utf-8');
     

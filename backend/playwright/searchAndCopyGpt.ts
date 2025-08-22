@@ -164,16 +164,16 @@ const buildBrandPresenceMatrix = (answerText: string): Record<string, number> =>
 
 const searchAndCopy = async ({
   context,
-  page,
   question,
   outputRecord,
 }: {
   context: BrowserContext;
-  page: Page;
   question: string;
   outputRecord: OutputRecord;
 }) => {
   try {
+    const page = await context.newPage();
+
     // 1. Navigate to ChatGPT
     await page.goto("https://chatgpt.com");
 
