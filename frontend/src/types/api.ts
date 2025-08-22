@@ -4,6 +4,7 @@ export interface FormData {
   productsServices: string;
   targetRegions: string;
   competitorBrands: string;
+  questionsCount: number;
 }
 
 export interface Question {

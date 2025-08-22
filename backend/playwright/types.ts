@@ -1,3 +1,13 @@
+export type UserParams = {
+  brandNames: string[];
+  brandWebsites: string[];
+  productServices: string;
+  targetRegions: string;
+  competitorBrands: string[];
+  fileName: string;
+  questionCount: number;
+}
+
 export type OutputRecord = {
   no: number;
   query: string;

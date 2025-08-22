@@ -1,28 +1,27 @@
-import { getJson } from "serpapi";
-import { AiOverview, OutputRecord } from "./types";
-import { brandNames, competitorBrands } from "./params";
-import { retryWithBackoff } from "./utils";
+import { getJson } from 'serpapi';
+import { AiOverview, OutputRecord, UserParams } from './types';
+import { retryWithBackoff } from './utils';
 
 // Retry mechanism with exponential backoff
 // Convert ai_overview text_blocks to markdown format
 function convertToMarkdown(aiOverview: AiOverview): string {
   if (!aiOverview || !aiOverview.text_blocks) {
-    return "No AI overview available";
+    return 'No AI overview available';
   }
 
-  let markdown = "";
-  
+  let markdown = '';
+
   for (const block of aiOverview.text_blocks) {
     switch (block.type) {
-      case "heading":
+      case 'heading':
         markdown += `## ${block.snippet}\n\n`;
         break;
-        
-      case "paragraph":
+
+      case 'paragraph':
         markdown += `${block.snippet}\n\n`;
         break;
-        
-      case "list":
+
+      case 'list':
         if (block.list && Array.isArray(block.list)) {
           for (const item of block.list) {
             if (item.title) {
@@ -38,18 +37,18 @@ function convertToMarkdown(aiOverview: AiOverview): string {
                   markdown += `  - ${nestedItem.snippet}\n`;
                 }
               }
-              markdown += "\n";
+              markdown += '\n';
             }
           }
         }
         break;
-        
-      case "expandable":
+
+      case 'expandable':
         if (block.text_blocks) {
           markdown += convertToMarkdown({ text_blocks: block.text_blocks });
         }
         break;
-        
+
       default:
         if (block.snippet) {
           markdown += `${block.snippet}\n\n`;
@@ -57,7 +56,7 @@ function convertToMarkdown(aiOverview: AiOverview): string {
         break;
     }
   }
-  
+
   return markdown.trim();
 }
 
@@ -66,7 +65,7 @@ function checkBrandExistenceInText(text: string, brandNames: string[]): number {
   if (!text || !brandNames || brandNames.length === 0) {
     return 0;
   }
-  
+
   const lowerText = text.toLowerCase();
   return brandNames.reduce((count, brand) => {
     const lowerBrand = brand.toLowerCase().trim();
@@ -76,71 +75,84 @@ function checkBrandExistenceInText(text: string, brandNames: string[]): number {
 
 // Function to calculate aioBrandCompare
 // Returns true if total count of brandNames and competitorBrands >= 2, otherwise false
-function calculateAioBrandCompare(aiOverviewText: string): boolean {
+function calculateAioBrandCompare(
+  aiOverviewText: string,
+  brandNames: string[],
+  competitorBrands: string[]
+): boolean {
   if (!aiOverviewText) {
     return false;
   }
-  
+
   // for own brand, we only need to check if it exists
-  const brandNamesCount = checkBrandExistenceInText(aiOverviewText, brandNames) > 0 ? 1 : 0;
-  const competitorBrandsCount = checkBrandExistenceInText(aiOverviewText, competitorBrands);
+  const brandNamesCount =
+    checkBrandExistenceInText(aiOverviewText, brandNames) > 0 ? 1 : 0;
+  const competitorBrandsCount = checkBrandExistenceInText(
+    aiOverviewText,
+    competitorBrands
+  );
   const matchCount = brandNamesCount + competitorBrandsCount;
-  
+
   return matchCount >= 2;
 }
 
 // Function to calculate aioBrandExist
 // Returns true if any of brandNames exists in result.ai_overview, otherwise false
-function calculateAioBrandExist(aiOverviewText: string): boolean {
+function calculateAioBrandExist(
+  aiOverviewText: string,
+  brandNames: string[]
+): boolean {
   if (!aiOverviewText) {
     return false;
   }
-  
+
   return checkBrandExistenceInText(aiOverviewText, brandNames) > 0;
 }
 
 // Make SerpAPI call with pagination handling and retry mechanism
-async function getSerpApiResult(query: string): Promise<{ ai_overview?: AiOverview; error?: string }> {
+async function getSerpApiResult(
+  query: string
+): Promise<{ ai_overview?: AiOverview; error?: string }> {
   try {
     // Initial API call with retry mechanism
     const json = await retryWithBackoff(async () => {
       const result = await getJson({
         q: query,
         api_key: process.env.SERPAPI_KEY,
-        location_requested: "Taipei, Taiwan",
-        location_used: "Taipei,Taiwan",
-        google_domain: "google.com.tw",
-        hl: "zh-tw",
-        gl: "tw"
+        location_requested: 'Taipei, Taiwan',
+        location_used: 'Taipei,Taiwan',
+        google_domain: 'google.com.tw',
+        hl: 'zh-tw',
+        gl: 'tw',
       });
-      
+
       if (result.error) {
         throw new Error(`SerpAPI error: ${result.error}`);
       }
-      
+
       return result;
     });
-    
+
     // Check if ai_overview needs pagination
     if (json.ai_overview && json.ai_overview.page_token) {
       // Make second API call for pagination with retry mechanism
       const paginationJson = await retryWithBackoff(async () => {
         const result = await getJson({
-          engine: "google_ai_overview",
+          engine: 'google_ai_overview',
           api_key: process.env.SERPAPI_KEY,
-          page_token: json.ai_overview.page_token
+          page_token: json.ai_overview.page_token,
         });
-        
+
         if (result.error) {
           throw new Error(`SerpAPI pagination error: ${result.error}`);
         }
-        
+
         return result;
       });
-      
+
       return paginationJson;
     }
-    
+
     return json;
   } catch (error) {
     throw error;
@@ -150,33 +162,45 @@ async function getSerpApiResult(query: string): Promise<{ ai_overview?: AiOvervi
 const searchAndCopyGoogle = async ({
   question,
   outputRecord,
+  params,
 }: {
   question: string;
   outputRecord: OutputRecord;
+  params: UserParams;
 }) => {
   try {
     console.log(`🔍 Searching Google Taiwan for: ${question}`);
-    
+
     const result = await getSerpApiResult(question);
-    
+
     if (result.ai_overview) {
       const markdownContent = convertToMarkdown(result.ai_overview);
       outputRecord.aio = markdownContent;
-      outputRecord.aioBrandCompare = calculateAioBrandCompare(markdownContent) ? '是' : '否';
-      outputRecord.aioBrandExist = calculateAioBrandExist(markdownContent) ? '有' : '無';
-      
-      console.log("✅ Found AI overview from Google");
+      outputRecord.aioBrandCompare = calculateAioBrandCompare(
+        markdownContent,
+        params.brandNames,
+        params.competitorBrands
+      )
+        ? '是'
+        : '否';
+      outputRecord.aioBrandExist = calculateAioBrandExist(
+        markdownContent,
+        params.brandNames
+      )
+        ? '有'
+        : '無';
+
+      console.log('✅ Found AI overview from Google');
     } else {
-      outputRecord.aio = "No AI overview found";
+      outputRecord.aio = 'No AI overview found';
       outputRecord.aioBrandCompare = '否';
       outputRecord.aioBrandExist = '無';
-      console.log("⚠️ No AI overview available");
+      console.log('⚠️ No AI overview available');
     }
-    
   } catch (error) {
-    console.error("❌ Error in Google search:", error.message);
-    outputRecord.aio = "Error during Google search";
+    console.error('❌ Error in Google search:', error.message);
+    outputRecord.aio = 'Error during Google search';
   }
 };
 
-export default searchAndCopyGoogle; 
+export default searchAndCopyGoogle;

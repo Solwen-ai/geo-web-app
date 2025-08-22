@@ -13,6 +13,7 @@ export const HomePage = () => {
     productsServices: 'seo',
     targetRegions: 'taiwan',
     competitorBrands: 'awoo,阿物,零一,ranking,mtmg',
+    questionsCount: 2,
   });
 
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -166,8 +167,28 @@ export const HomePage = () => {
                 </p>
               </div>
 
-              {/* Empty cell for Row 3, Column 2 */}
-              <div></div>
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">
+                  問題數量
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={formData.questionsCount}
+                  onChange={e =>
+                    setFormData({
+                      ...formData,
+                      questionsCount: parseInt(e.target.value) || 1,
+                    })
+                  }
+                  placeholder="請輸入要生成的問題數量"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p className="text-sm text-gray-500">
+                  建議：1-50 個問題
+                </p>
+              </div>
             </div>
 
             {/* Error Message */}

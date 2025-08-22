@@ -2,36 +2,14 @@ import { chromium } from 'playwright-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import searchAndCopyGpt from './searchAndCopyGpt';
 import searchAndCopyGoogle from './searchAndCopyGoogle';
-import { OutputRecord } from './types';
-import fs from 'fs';
-import dotenv from 'dotenv';
+import { OutputRecord, UserParams } from './types';
 import { exportToCSV } from './csvExporter';
-import { Page } from 'playwright';
 import { delay } from './utils';
-import * as params from './params';
-
-// Load environment variables from .env.local
-dotenv.config({ path: '.env.local' });
 
 // Add stealth plugin
 chromium.use(StealthPlugin());
 
-// Function to read questions from file
-const readQuestions = (): string[] => {
-  try {
-    const content = fs.readFileSync('playwright/questions.txt', 'utf-8');
-    return content.split('\n').filter(line => line.trim() !== '');
-  } catch (error) {
-    console.error('❌ Error reading questions.txt:', error);
-    return [];
-  }
-};
-
-async function main() {
-  // Read questions from file
-  const questions = readQuestions();
-  console.log(`📝 Loaded ${questions.length} questions from questions.txt`);
-
+export async function scrapingEntry({ questions, params }: { questions: string[], params: UserParams }) {
   if (questions.length === 0) {
     console.error('❌ No questions found, exiting...');
     return;
@@ -124,11 +102,3 @@ async function main() {
     await context.close();
   }
 }
-
-// Handle graceful shutdown
-process.on('SIGINT', async () => {
-  console.log('\n👋 Closing browser...');
-  process.exit(0);
-});
-
-main().catch(console.error);
