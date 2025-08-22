@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { QuestionList } from '../components/QuestionList';
 import { useQuestions } from '../hooks/useQuestions';
-import { useInitScraping } from '../hooks/useInitScraping';
 import type { FormData, Question } from '../types/api';
 
 export const HomePage = () => {
@@ -17,18 +16,21 @@ export const HomePage = () => {
   });
 
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [reportId, setReportId] = useState<string>('');
   const [error, setError] = useState<string>('');
 
-  const questionsMutation = useQuestions();
-  const initScrapingMutation = useInitScraping();
+  const { submitForm, initScraping } = useQuestions();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     try {
-      const response = await questionsMutation.mutateAsync(formData);
+      const response = await submitForm.mutateAsync(formData);
       setQuestions(response.questions);
+      if (response.reportId) {
+        setReportId(response.reportId);
+      }
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : '提交失敗，請稍後再試';
@@ -42,10 +44,15 @@ export const HomePage = () => {
       return;
     }
 
+    if (!reportId) {
+      setError('報告ID不存在，請重新生成問題');
+      return;
+    }
+
     setError('');
 
     try {
-      await initScrapingMutation.mutateAsync(questions);
+      await initScraping.mutateAsync({ questions, reportId });
       // Navigate to report page after successful scraping initialization
       navigate('/report');
     } catch (err: unknown) {
@@ -174,10 +181,10 @@ export const HomePage = () => {
             <div className="flex justify-center">
               <button
                 type="submit"
-                disabled={questionsMutation.isPending}
+                disabled={submitForm.isPending}
                 className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
               >
-                {questionsMutation.isPending ? (
+                {submitForm.isPending ? (
                   <>
                     <LoadingSpinner size="sm" />
                     <span>生成中...</span>
@@ -201,13 +208,13 @@ export const HomePage = () => {
               <div className="mt-6 flex justify-center">
                 <button
                   onClick={handleInitScraping}
-                  disabled={initScrapingMutation.isPending}
+                  disabled={initScraping.isPending}
                   className="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
                 >
-                  {initScrapingMutation.isPending ? (
+                  {initScraping.isPending ? (
                     <>
                       <LoadingSpinner size="sm" />
-                      <span>儲存中...</span>
+                      <span>處理中...</span>
                     </>
                   ) : (
                     <span>產生文件</span>

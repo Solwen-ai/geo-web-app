@@ -8,13 +8,13 @@ import dotenv from 'dotenv';
 import { exportToCSV } from './csvExporter';
 import { Page } from 'playwright';
 import { delay } from './utils';
+import { fileName } from './params';
 
 // Load environment variables from .env.local
 dotenv.config({ path: '.env.local' });
 
 // Add stealth plugin
 chromium.use(StealthPlugin());
-const OUTPUT_FILE = 'geo.csv';
 
 // Function to read questions from file
 const readQuestions = (): string[] => {
@@ -119,9 +119,9 @@ async function main() {
 
     // Export to CSV
     console.log(
-      `\n💾 Exporting ${outputRecords.length} records to ${OUTPUT_FILE}...`
+      `\n💾 Exporting ${outputRecords.length} records to ${fileName}...`
     );
-    await exportToCSV(outputRecords, OUTPUT_FILE);
+    await exportToCSV(outputRecords, fileName);
   } catch (error) {
     console.error('❌ Fatal error:', error);
   } finally {

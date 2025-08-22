@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { FormData, QuestionsResponse, ApiError, Question } from '../types/api';
+import type { FormData, QuestionsResponse, ApiError, Question, ReportsResponse } from '../types/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -28,9 +28,26 @@ export const apis = {
     }
   },
 
-  async initScraping(questions: Question[]): Promise<{ message: string; timestamp: string }> {
+  async initScraping(questions: Question[], reportId: string): Promise<{ message: string; timestamp: string }> {
     try {
-      const response = await api.post('/api/init-scraping', { questions });
+      const response = await api.post('/api/init-scraping', { questions, reportId });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw {
+          message: error.response?.data?.message || error.message,
+          status: error.response?.status,
+        } as ApiError;
+      }
+      throw {
+        message: 'An unexpected error occurred',
+      } as ApiError;
+    }
+  },
+
+  async getReports(): Promise<ReportsResponse> {
+    try {
+      const response = await api.get<ReportsResponse>('/api/reports');
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
