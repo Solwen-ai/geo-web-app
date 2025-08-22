@@ -30,7 +30,24 @@ export const apis = {
 
   async initScraping(questions: Question[], reportId: string): Promise<{ message: string; timestamp: string }> {
     try {
-      const response = await api.post('/api/init-scraping', { questions, reportId });
+      const response = await api.post('/api/scraping/init', { questions, reportId });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw {
+          message: error.response?.data?.message || error.message,
+          status: error.response?.status,
+        } as ApiError;
+      }
+      throw {
+        message: 'An unexpected error occurred',
+      } as ApiError;
+    }
+  },
+
+  async startScraping(): Promise<{ message: string; timestamp: string }> {
+    try {
+      const response = await api.post('/api/scraping/start');
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {

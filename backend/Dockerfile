@@ -1,3 +1,7 @@
+# Regarding backend Dockerfile, I'd like to modify it as follows
+# 1. use ubuntu as base image
+# 2. make sure gui is included
+
 # Multi-stage build for Node.js backend
 FROM node:18-alpine AS builder
 

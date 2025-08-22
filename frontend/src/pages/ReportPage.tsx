@@ -7,17 +7,23 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export const ReportPage = () => {
   const [isConnected, setIsConnected] = useState(false);
+  const [eventSource, setEventSource] = useState<EventSource | null>(null);
   const { data: reportsData, isLoading, error, refetch } = useReports();
 
-  useEffect(() => {
-    const eventSource = new EventSource(`${API_BASE_URL}/api/sse`);
+  const connectSSE = () => {
+    // Close existing connection if any
+    if (eventSource) {
+      eventSource.close();
+    }
 
-    eventSource.onopen = () => {
+    const newEventSource = new EventSource(`${API_BASE_URL}/api/sse`);
+
+    newEventSource.onopen = () => {
       console.log('SSE connection opened');
       setIsConnected(true);
     };
 
-    eventSource.onmessage = event => {
+    newEventSource.onmessage = event => {
       console.log('Received SSE message:', event.data);
       try {
         const data: SSEMessage = JSON.parse(event.data);
@@ -32,16 +38,35 @@ export const ReportPage = () => {
       }
     };
 
-    eventSource.onerror = error => {
+    newEventSource.onerror = error => {
       console.error('SSE connection error:', error);
       setIsConnected(false);
     };
 
-    return () => {
+    setEventSource(newEventSource);
+  };
+  
+
+  const disconnectSSE = () => {
+    if (eventSource) {
       eventSource.close();
+      setEventSource(null);
       setIsConnected(false);
+    }
+  };
+
+  const handleReconnect = () => {
+    disconnectSSE();
+    connectSSE();
+  };
+
+  useEffect(() => {
+    connectSSE();
+
+    return () => {
+      disconnectSSE();
     };
-  }, [refetch]);
+  }, []);
 
   const getStatusColor = (status: Report['status']) => {
     switch (status) {
@@ -132,15 +157,25 @@ export const ReportPage = () => {
 
           {/* Connection Status */}
           <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-center space-x-2">
-              <div
-                className={`w-3 h-3 rounded-full ${
-                  isConnected ? 'bg-green-500' : 'bg-red-500'
-                }`}
-              ></div>
-              <span className="text-sm font-medium">
-                {isConnected ? '已連接到 SSE 伺服器' : '未連接到 SSE 伺服器'}
-              </span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div
+                  className={`w-3 h-3 rounded-full ${
+                    isConnected ? 'bg-green-500' : 'bg-red-500'
+                  }`}
+                ></div>
+                <span className="text-sm font-medium">
+                  {isConnected ? '已連接到即時更新服務' : '未連接到即時更新服務'}
+                </span>
+              </div>
+              {!isConnected && (
+                <button
+                  onClick={handleReconnect}
+                  className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                >
+                  重新連接
+                </button>
+              )}
             </div>
           </div>
 
