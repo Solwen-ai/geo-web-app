@@ -53,8 +53,8 @@ export async function scrapingEntry({ questions, params }: { questions: string[]
   try {
     // Loop through all questions
     for (let i = 0; i < questions.length; i++) {
-      const question = questions[i];
-      const outputRecord = outputRecords[i];
+      const question = questions[i]!;
+      const outputRecord = outputRecords[i]!;
       outputRecord.query = question;
 
       console.log(

@@ -11,23 +11,14 @@ router.post('/', async (req, res) => {
   try {
     console.log('🚀 req.body', req.body);
 
-    // Generate fileName first
-    const fileName = `${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '')}.csv`;
-    
-    // Create a new report entry
-    const report = reportService.createReport(fileName);
-    console.log(`📝 Created report entry: ${report.id} with fileName: ${fileName}`);
-
-    // Save the data to params.ts (this will use the same fileName)
-    await fileService.saveToParamsFile(req.body as FormData, fileName);
+    // may not necessary to save the data to params.ts
+    // await fileService.saveToParamsFile(req.body as FormData, fileName);
 
     // Generate questions using OpenAI
     const questions = await openaiService.generateQuestions(req.body as FormData);
 
     return res.json({
       questions,
-      reportId: report.id,
-      fileName: report.fileName,
       timestamp: new Date().toISOString()
     });
   } catch (error) {

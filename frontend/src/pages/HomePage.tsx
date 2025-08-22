@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { QuestionList } from '../components/QuestionList';
 import { useQuestions } from '../hooks/useQuestions';
-import type { FormData, Question } from '../types/api';
+import type { FormData } from '../types/api';
 
 export const HomePage = () => {
   const navigate = useNavigate();
@@ -16,8 +16,7 @@ export const HomePage = () => {
     questionsCount: 2,
   });
 
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [reportId, setReportId] = useState<string>('');
+  const [questions, setQuestions] = useState<string[]>([]);
   const [error, setError] = useState<string>('');
 
   const { submitForm, initScraping } = useQuestions();
@@ -29,9 +28,6 @@ export const HomePage = () => {
     try {
       const response = await submitForm.mutateAsync(formData);
       setQuestions(response.questions);
-      if (response.reportId) {
-        setReportId(response.reportId);
-      }
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : '提交失敗，請稍後再試';
@@ -45,15 +41,10 @@ export const HomePage = () => {
       return;
     }
 
-    if (!reportId) {
-      setError('報告ID不存在，請重新生成問題');
-      return;
-    }
-
     setError('');
 
     try {
-      await initScraping.mutateAsync({ questions, reportId });
+      await initScraping.mutateAsync({ questions, params: formData });
       // Navigate to report page after successful scraping initialization
       navigate('/report');
     } catch (err: unknown) {

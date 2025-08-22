@@ -1,12 +1,7 @@
 // TypeScript interfaces
-export interface Question {
-  id: string;
-  question: string;
-}
-
 export interface InitScrapingRequest {
-  questions: Question[];
-  reportId: string;
+  questions: string[];
+  params: FormData;
 }
 
 export interface InitScrapingResponse {
@@ -34,7 +29,7 @@ export interface FormData {
 }
 
 export interface QuestionsResponse {
-  questions: Question[];
+  questions: string[];
   reportId?: string;
   fileName?: string;
   timestamp: string;

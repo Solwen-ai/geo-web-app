@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { apis } from '../services/api';
-import type { FormData, QuestionsResponse, ApiError, Question } from '../types/api';
+import type { FormData, QuestionsResponse, ApiError } from '../types/api';
 
 export const useQuestions = () => {
   const submitForm = useMutation<QuestionsResponse, ApiError, FormData>({
@@ -13,9 +13,9 @@ export const useQuestions = () => {
   const initScraping = useMutation<
     { message: string; timestamp: string },
     ApiError,
-    { questions: Question[]; reportId: string }
+    { questions: string[]; params: FormData }
   >({
-    mutationFn: ({ questions, reportId }) => apis.initScraping(questions, reportId),
+    mutationFn: ({ questions, params }) => apis.initScraping(questions, params),
     onError: (error) => {
       console.error('Init Scraping Error:', error);
     },

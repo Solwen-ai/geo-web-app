@@ -15,7 +15,10 @@ export const reportService = {
   },
 
   // Create a new report
-  createReport(fileName: string): Report {
+  createReport(): Report {
+    // Generate id & fileName
+    const fileName = `${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '')}.csv`;
+    // TODO: should use uuid
     const id = `report_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const now = new Date().toISOString();
     

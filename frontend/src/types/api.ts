@@ -7,15 +7,8 @@ export interface FormData {
   questionsCount: number;
 }
 
-export interface Question {
-  id: string;
-  question: string;
-}
-
 export interface QuestionsResponse {
-  questions: Question[];
-  reportId?: string;
-  fileName?: string;
+  questions: string[];
   timestamp: string;
 }
 

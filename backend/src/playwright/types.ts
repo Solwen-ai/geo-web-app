@@ -4,8 +4,8 @@ export type UserParams = {
   productServices: string;
   targetRegions: string;
   competitorBrands: string[];
-  fileName: string;
   questionCount: number;
+  fileName: string;
 }
 
 export type OutputRecord = {

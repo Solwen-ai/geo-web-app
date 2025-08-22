@@ -1,38 +1,36 @@
 import { useState } from 'react';
-import type { Question } from '../types/api';
 
 interface QuestionListProps {
-  questions: Question[];
+  questions: string[];
   className?: string;
-  onQuestionsChange?: (questions: Question[]) => void;
+  onQuestionsChange?: (questions: string[]) => void;
 }
 
 export const QuestionList = ({ questions, className = '', onQuestionsChange }: QuestionListProps) => {
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState<string>('');
 
   if (questions.length === 0) {
     return null;
   }
 
-  const handleEdit = (question: Question) => {
-    setEditingId(question.id);
-    setEditValue(question.question);
+  const handleEdit = (index: number) => {
+    setEditingIndex(index);
+    setEditValue(questions[index]);
   };
 
   const handleSave = () => {
-    if (editingId && onQuestionsChange) {
-      const updatedQuestions = questions.map(q => 
-        q.id === editingId ? { ...q, question: editValue } : q
-      );
+    if (editingIndex !== null && onQuestionsChange) {
+      const updatedQuestions = [...questions];
+      updatedQuestions[editingIndex] = editValue;
       onQuestionsChange(updatedQuestions);
     }
-    setEditingId(null);
+    setEditingIndex(null);
     setEditValue('');
   };
 
   const handleCancel = () => {
-    setEditingId(null);
+    setEditingIndex(null);
     setEditValue('');
   };
 
@@ -44,16 +42,23 @@ export const QuestionList = ({ questions, className = '', onQuestionsChange }: Q
     }
   };
 
+  const handleDelete = (index: number) => {
+    if (onQuestionsChange) {
+      const updatedQuestions = questions.filter((_, i) => i !== index);
+      onQuestionsChange(updatedQuestions);
+    }
+  };
+
   return (
     <div className={`space-y-4 ${className}`}>
       <h3 className="text-lg font-semibold text-gray-800">生成的問題：</h3>
       <div className="space-y-3">
-        {questions.map((question) => (
+        {questions.map((question, index) => (
           <div
-            key={question.id}
+            key={index}
             className="p-4 bg-blue-50 border border-blue-200 rounded-lg"
           >
-            {editingId === question.id ? (
+            {editingIndex === index ? (
               <div className="space-y-2">
                 <textarea
                   value={editValue}
@@ -80,13 +85,26 @@ export const QuestionList = ({ questions, className = '', onQuestionsChange }: Q
               </div>
             ) : (
               <div className="flex justify-between items-start">
-                <p className="text-gray-800 leading-relaxed flex-1">{question.question}</p>
-                <button
-                  onClick={() => handleEdit(question)}
-                  className="ml-4 px-2 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-                >
-                  編輯
-                </button>
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <span className="text-sm font-medium text-gray-600">#{index + 1}</span>
+                  </div>
+                  <p className="text-gray-800 leading-relaxed">{question}</p>
+                </div>
+                <div className="flex space-x-2 ml-4">
+                  <button
+                    onClick={() => handleEdit(index)}
+                    className="px-2 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                  >
+                    編輯
+                  </button>
+                  <button
+                    onClick={() => handleDelete(index)}
+                    className="px-2 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors"
+                  >
+                    刪除
+                  </button>
+                </div>
               </div>
             )}
           </div>

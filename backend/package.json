@@ -9,8 +9,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "clean": "rm -rf dist",
-    "grab": "npx --yes tsx playwright/grabTheThings.ts",
-    "manual": "npx --yes tsx playwright/login.ts"
+    "grab": "npx --yes tsx src/playwright/grabTheThings.ts",
+    "manual": "npx --yes tsx src/playwright/login.ts"
   },
   "keywords": [
     "api",

@@ -2,7 +2,7 @@ import type { FormData } from '../types/index.js';
 
 export const openaiService = {
   // Generate questions using OpenAI API
-  async generateQuestions(promptData: FormData): Promise<{id: string, question: string}[]> {
+  async generateQuestions(promptData: FormData): Promise<string[]> {
     try {
       const openaiApiKey = process.env.OPENAI_API_KEY;
       if (!openaiApiKey) {
@@ -30,9 +30,12 @@ export const openaiService = {
 台北哪幾位皮膚科醫師口碑最好又不用排隊排很久？
 
 # 輸出格式（一次輸出 ${promptData.questionsCount} 題，嚴格遵守下方格式，不得加入其他文字或空行）
-問題
-問題
+1.
+問題敘述
+2.
+問題敘述
       `;
+      console.log('🚀 prompt', prompt);
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -66,12 +69,8 @@ export const openaiService = {
         .split('\n')
         .map((q: string) => q.trim())
         .filter((q: string) => q.length > 0 && !q.match(/^\d+\./)) // Remove numbering
-        .slice(0, 100) // Ensure we get exactly 100 questions
-        .map((question: string, index: number) => ({
-          id: (index + 1).toString(),
-          question: question
-        }));
 
+      console.log('🚀 questions', questions);
       console.log(`✅ Generated ${questions.length} questions using OpenAI`);
       return questions;
     } catch (error) {

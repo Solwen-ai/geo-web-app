@@ -28,26 +28,9 @@ export const apis = {
     }
   },
 
-  async initScraping(questions: Question[], reportId: string): Promise<{ message: string; timestamp: string }> {
+  async initScraping(questions: string[], params: FormData): Promise<{ message: string; timestamp: string }> {
     try {
-      const response = await api.post('/api/scraping/init', { questions, reportId });
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw {
-          message: error.response?.data?.message || error.message,
-          status: error.response?.status,
-        } as ApiError;
-      }
-      throw {
-        message: 'An unexpected error occurred',
-      } as ApiError;
-    }
-  },
-
-  async startScraping(): Promise<{ message: string; timestamp: string }> {
-    try {
-      const response = await api.post('/api/scraping/start');
+      const response = await api.post('/api/scraping/init', { questions, params });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {

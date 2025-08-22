@@ -4,4 +4,5 @@ export const brandWebsites = ["welly.tw"];
 export const productServices = 'seo';
 export const targetRegions = 'taiwan';
 export const competitorBrands = ["awoo","阿物","零一","ranking","mtmg"];
-export const fileName = '202508220525.csv';
+export const fileName = '202508220922.csv';
+export const questionCount = 5;
