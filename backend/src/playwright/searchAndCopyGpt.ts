@@ -1,6 +1,6 @@
 import { BrowserContext, Page } from 'playwright';
 import { OutputRecord, UserParams } from './types.js';
-import { delay } from './utils.js';
+import { delay, logErrorAndScreenshot } from './utils.js';
 
 const clearInput = async (page: Page) => {
   try {
@@ -20,11 +20,8 @@ const clearInput = async (page: Page) => {
 
     console.log('✅ Cleared input field');
   } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.log('⚠️ Could not clear input field:', error.message);
-    } else {
-      console.log('⚠️ Could not clear input field:', String(error));
-    }
+    await logErrorAndScreenshot(page, 'clear-input', 'clear input field', error);
+    throw error;
   }
 };
 
@@ -39,52 +36,61 @@ const enableWebSearch = async (page: Page) => {
     await page.keyboard.press('Enter');
 
     console.log("✅ Typed '/search' to enable web search");
-  } catch (error) {
-    console.log(
-      "⚠️ Could not type '/search', continuing without Web search..."
-    );
+  } catch (error: unknown) {
+    await logErrorAndScreenshot(page, 'enable-web-search', 'enable web search', error);
+    throw error;
   }
 };
 
 const askQuestion = async (page: Page, question: string) => {
-  const inputSelector = 'div#prompt-textarea[contenteditable="true"]';
-  await page.waitForSelector(inputSelector, { timeout: 15000 });
-  await page.click(inputSelector);
-  await page.type(inputSelector, question, { delay: 100 });
-  await page.keyboard.press('Enter');
+  try {
+    const inputSelector = 'div#prompt-textarea[contenteditable="true"]';
+    await page.waitForSelector(inputSelector, { timeout: 15000 });
+    await page.click(inputSelector);
+    await page.type(inputSelector, question, { delay: 100 });
+    await page.keyboard.press('Enter');
 
-  console.log('✅ Asked question:', question.substring(0, 50) + '...');
+    console.log('✅ Asked question:', question.substring(0, 50) + '...');
+  } catch (error: unknown) {
+    await logErrorAndScreenshot(page, 'ask-question', question, error);
+    throw error;
+  }
 };
 
 const copyAnswer = async (
   page: Page,
   context: BrowserContext
 ): Promise<string> => {
-  // Wait for the response and find the copy button using data-testid
-  const copyButtonSelector =
-    'article[data-testid="conversation-turn-2"] button[data-testid="copy-turn-action-button"]';
-  await page.waitForSelector(copyButtonSelector, { timeout: 120000 });
+  try {
+    // Wait for the response and find the copy button using data-testid
+    const copyButtonSelector =
+      'article[data-testid="conversation-turn-2"] button[data-testid="copy-turn-action-button"]';
+    await page.waitForSelector(copyButtonSelector, { timeout: 120000 });
 
-  // Scroll to the bottom to ensure buttons are visible
-  await page.evaluate(() => {
-    window.scrollTo(0, document.body.scrollHeight);
-  });
+    // Scroll to the bottom to ensure buttons are visible
+    await page.evaluate(() => {
+      window.scrollTo(0, document.body.scrollHeight);
+    });
 
-  // Find and click the copy button
-  const copyButton = await page.locator(copyButtonSelector).first();
-  await copyButton.waitFor({ timeout: 10000 });
-  await copyButton.click();
-  await delay(1);
-  // not sure why, but it's working fine when click twice...
-  await copyButton.click();
+    // Find and click the copy button
+    const copyButton = await page.locator(copyButtonSelector).first();
+    await copyButton.waitFor({ timeout: 10000 });
+    await copyButton.click();
+    await delay(1);
+    // not sure why, but it's working fine when click twice...
+    await copyButton.click();
 
-  // Read the clipboard
-  const clipboardText = await page.evaluate(async () => {
-    return await navigator.clipboard.readText();
-  });
+    // Read the clipboard
+    const clipboardText = await page.evaluate(async () => {
+      return await navigator.clipboard.readText();
+    });
 
-  console.log('✅ Copied answer from clipboard');
-  return clipboardText;
+    console.log('✅ Copied answer from clipboard');
+    return clipboardText;
+  } catch (error: unknown) {
+    await logErrorAndScreenshot(page, 'copy-answer', 'copy answer from clipboard', error);
+    throw error;
+  }
 };
 
 // Function to check if answerText contains brandWebsites
@@ -205,9 +211,9 @@ const searchAndCopyGpt = async ({
   outputRecord: OutputRecord;
   params: UserParams;
 }) => {
+  const page = await context.newPage();
+  
   try {
-    const page = await context.newPage();
-
     // 1. Navigate to ChatGPT
     await page.goto('https://chatgpt.com');
 
@@ -255,12 +261,10 @@ const searchAndCopyGpt = async ({
     );
     Object.assign(outputRecord, brandMatrix);
   } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error('❌ Error:', error.message);
-    } else {
-      console.error('❌ Error:', String(error));
-    }
+    await logErrorAndScreenshot(page, 'chatgpt', question, error);
     throw error;
+  } finally {
+    await page.close();
   }
 };
 

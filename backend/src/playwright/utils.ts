@@ -56,3 +56,31 @@ export async function retryWithBackoff<T>(
   
   throw lastError!;
 }
+
+// Shared function to log error and capture screenshot
+export async function logErrorAndScreenshot(
+  page: any,
+  action: string,
+  question: string,
+  error: unknown
+): Promise<void> {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const sanitizedQuestion = question.replace(/[^a-zA-Z0-9\s]/g, '').substring(0, 50).trim();
+  const filename = `reports/error-${action}-${sanitizedQuestion}-${timestamp}.png`;
+  
+  try {
+    await page.screenshot({ 
+      path: filename,
+      fullPage: true 
+    });
+    console.log(`📸 Screenshot saved: ${filename}`);
+  } catch (screenshotError) {
+    console.error('❌ Failed to capture screenshot:', screenshotError);
+  }
+  
+  if (error instanceof Error) {
+    console.error(`❌ Error during ${action}:`, error.message);
+  } else {
+    console.error(`❌ Error during ${action}:`, String(error));
+  }
+}

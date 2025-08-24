@@ -23,7 +23,7 @@ export async function manualLogin() {
   await page.goto("http://chatgpt.com/");
   await page.waitForTimeout(10 * 1000);
   await page.screenshot({ path: 'debug-login.png', fullPage: true });
-  await context.close();
+  // await context.close();
   // const storage = await context.storageState({ path: 'auth.json' });
 } 
 
