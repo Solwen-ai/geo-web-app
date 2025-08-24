@@ -1,14 +1,14 @@
 import { chromium } from 'playwright-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-import searchAndCopyGpt from './searchAndCopyGpt';
-import searchAndCopyGoogle from './searchAndCopyGoogle';
-import { OutputRecord } from './types';
+import searchAndCopyGpt from './searchAndCopyGpt.js';
+import searchAndCopyGoogle from './searchAndCopyGoogle.js';
+import { OutputRecord } from './types.js';
 import fs from 'fs';
 import dotenv from 'dotenv';
-import { exportToCSV } from './csvExporter';
+import { exportToCSV } from './csvExporter.js';
 import { Page } from 'playwright';
-import { delay } from './utils';
-import * as params from './params';
+import { delay } from './utils.js';
+import * as params from './params.js';
 
 // Load environment variables from .env.local
 dotenv.config({ path: '.env.local' });
@@ -75,8 +75,8 @@ async function main() {
   try {
     // Loop through all questions
     for (let i = 0; i < questions.length; i++) {
-      const question = questions[i];
-      const outputRecord = outputRecords[i];
+      const question = questions[i]!;
+      const outputRecord = outputRecords[i]!;
       outputRecord.query = question;
 
       console.log(
@@ -107,8 +107,12 @@ async function main() {
         if (i < questions.length - 1) {
           await delay(2);
         }
-      } catch (error) {
-        console.error(`❌ Error processing question ${i + 1}:`, error.message);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.error(`❌ Error processing question ${i + 1}:`, error.message);
+        } else {
+          console.error(`❌ Error processing question ${i + 1}:`, String(error));
+        }
         // Continue with next question instead of stopping
       }
     }

@@ -2,6 +2,15 @@
 
 A modern monorepo application with React frontend and Express backend, featuring Tailwind CSS for styling.
 
+## TODO
+1. awoo+阿物 use another separator
+1. Upload questions
+1. There should be only one ts typing
+1. backend import should not include 'js'
+1. pnpm lock should be included in Dockerfile
+1. frontend .env should be assigned in docker-compose.yml
+
+
 ## 🏗️ Project Structure
 
 ```

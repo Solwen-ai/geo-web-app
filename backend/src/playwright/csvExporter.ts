@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { OutputRecord } from './types';
-import { brandNames, competitorBrands } from './params';
+import { OutputRecord } from './types.js';
+import { brandNames, competitorBrands } from './params.js';
 
 // Base headers (excluding dynamic brand columns)
 const baseHeaders = [

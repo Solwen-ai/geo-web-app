@@ -1,55 +1,37 @@
-# Regarding backend Dockerfile, I'd like to modify it as follows
-# 1. use ubuntu as base image
-# 2. make sure gui is included
-
-# Multi-stage build for Node.js backend
-FROM node:18-alpine AS builder
-
-# Set working directory
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-COPY tsconfig.json ./
-
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy source code
-COPY src/ ./src/
-COPY playwright/ ./playwright/
-
-# Build TypeScript (if needed)
-RUN npm run build || echo "No build script found, continuing..."
-
-# Production stage
-FROM node:18-alpine AS production
-
-# Install Playwright dependencies and browsers
-RUN pnpm exec playwright install-deps
-RUN pnpm exec playwright install
+# Use official Playwright base image (Node.js + browsers preinstalled)
+FROM mcr.microsoft.com/playwright:v1.55.0
 
 # Create app directory
-WORKDIR /app
+WORKDIR /backend
 
 # Copy package files
-COPY package*.json ./
+COPY package*.json tsconfig.json ./
 
-# Install production dependencies only
-RUN npm ci --only=production && npm cache clean --force
+# Install dependencies
+RUN corepack enable && pnpm install
 
-# Copy built application from builder stage
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/src ./src
-COPY --from=builder /app/playwright ./playwright
+# Copy backend source
+COPY src/ /backend/src/
+# Build the application
+RUN pnpm run build
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nodejs -u 1001
+# Create directories for volumes
+RUN mkdir -p /backend/reports /backend/browser-data
 
-# Change ownership of the app directory
-RUN chown -R nodejs:nodejs /app
-USER nodejs
+# Install Xvfb for virtual display
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends xvfb && \
+    rm -rf /var/lib/apt/lists/*
+
+# Environment for headed mode
+ENV DISPLAY=:99
+
+# Copy entrypoint
+COPY docker-entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Use entrypoint to bootstrap Xvfb then run your backend
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # Expose port
 EXPOSE 3001
@@ -59,4 +41,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
 
 # Start the application
-CMD ["node", "src/index.js"]
+CMD ["pnpm", "start"]

@@ -1,10 +1,10 @@
 import { chromium } from 'playwright-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-import searchAndCopyGpt from './searchAndCopyGpt';
-import searchAndCopyGoogle from './searchAndCopyGoogle';
-import { OutputRecord, UserParams } from './types';
-import { exportToCSV } from './csvExporter';
-import { delay } from './utils';
+import searchAndCopyGpt from './searchAndCopyGpt.js';
+import searchAndCopyGoogle from './searchAndCopyGoogle.js';
+import { OutputRecord, UserParams } from './types.js';
+import { exportToCSV } from './csvExporter.js';
+import { delay } from './utils.js';
 
 // Add stealth plugin
 chromium.use(StealthPlugin());
@@ -85,8 +85,12 @@ export async function scrapingEntry({ questions, params }: { questions: string[]
         if (i < questions.length - 1) {
           await delay(2);
         }
-      } catch (error) {
-        console.error(`❌ Error processing question ${i + 1}:`, error.message);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.error(`❌ Error processing question ${i + 1}:`, error.message);
+        } else {
+          console.error(`❌ Error processing question ${i + 1}:`, String(error));
+        }
         // Continue with next question instead of stopping
       }
     }

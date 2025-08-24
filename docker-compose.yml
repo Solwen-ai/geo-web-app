@@ -21,10 +21,9 @@ services:
 
   # Frontend service with simple HTTP server
   frontend:
-    build:
-      context: ./frontend
-      args:
-        VITE_API_URL: ${VITE_API_URL:-/api}
+    build: ./frontend
+    env_file:
+      - .env
     expose:
       - "3000"
     depends_on:
@@ -43,11 +42,11 @@ services:
   # Backend service
   backend:
     build: ./backend
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
       - PORT=3001
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - SERPAPI_KEY=${SERPAPI_KEY}
     expose:
       - "3001"
     networks:
@@ -60,10 +59,10 @@ services:
       retries: 3
       start_period: 40s
     volumes:
-      # Persist generated files
-      - ./backend/geo.csv:/app/geo.csv
-      - ./backend/questions.txt:/app/questions.txt
-      - ./backend/playwright/params.ts:/app/playwright/params.ts
+      # Mount reports directory for CSV exports
+      - ./backend/reports:/backend/reports
+      # Mount browser-data directory for Playwright persistent context
+      - ./backend/browser-data:/backend/browser-data
 
 networks:
   app-network:

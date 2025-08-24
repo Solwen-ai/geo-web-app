@@ -12,12 +12,20 @@ export const cleanupClipboard = async (page: any) => {
       try {
         await navigator.clipboard.writeText('');
         console.log('🧹 Clipboard cleared successfully');
-      } catch (error) {
-        console.log('⚠️ Could not clear clipboard:', error.message);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.log('⚠️ Could not clear clipboard:', error.message);
+        } else {
+          console.log('⚠️ Could not clear clipboard:', String(error));
+        }
       }
     });
-  } catch (error) {
-    console.log('⚠️ Clipboard cleanup failed:', error.message);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.log('⚠️ Clipboard cleanup failed:', error.message);
+    } else {
+      console.log('⚠️ Clipboard cleanup failed:', String(error));
+    }
   }
 };
 

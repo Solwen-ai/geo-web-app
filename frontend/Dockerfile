@@ -1,5 +1,8 @@
 # Multi-stage build for React frontend
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
+
+# Enable corepack for pnpm
+RUN corepack enable
 
 # Set working directory
 WORKDIR /app
@@ -8,20 +11,19 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN pnpm install
 
 # Copy source code
 COPY . .
 
-# Build argument for API URL
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
-
 # Build the application
-RUN npm run build
+RUN pnpm run build
 
 # Production stage with simple HTTP server
-FROM node:18-alpine AS production
+FROM node:20-alpine AS production
+
+# Enable corepack for pnpm
+RUN corepack enable
 
 # Install serve package for static file serving
 RUN npm install -g serve

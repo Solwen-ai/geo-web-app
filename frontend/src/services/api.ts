@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { FormData, QuestionsResponse, ApiError, Question, ReportsResponse } from '../types/api';
+import type { FormData, QuestionsResponse, ApiError, ReportsResponse } from '../types/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 

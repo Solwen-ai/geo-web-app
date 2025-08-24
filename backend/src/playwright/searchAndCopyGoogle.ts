@@ -1,6 +1,6 @@
 import { getJson } from 'serpapi';
-import { AiOverview, OutputRecord, UserParams } from './types';
-import { retryWithBackoff } from './utils';
+import { AiOverview, OutputRecord, UserParams } from './types.js';
+import { retryWithBackoff } from './utils.js';
 
 // Retry mechanism with exponential backoff
 // Convert ai_overview text_blocks to markdown format
@@ -197,8 +197,12 @@ const searchAndCopyGoogle = async ({
       outputRecord.aioBrandExist = '無';
       console.log('⚠️ No AI overview available');
     }
-  } catch (error) {
-    console.error('❌ Error in Google search:', error.message);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error('❌ Error in Google search:', error.message);
+    } else {
+      console.error('❌ Error in Google search:', String(error));
+    }
     outputRecord.aio = 'Error during Google search';
   }
 };

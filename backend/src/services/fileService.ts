@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import type { FormData, Question } from '../types/index.js';
+import type { FormData } from '../types/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,11 +11,26 @@ export const fileService = {
   async saveToParamsFile(data: FormData, fileName: string): Promise<void> {
     try {
       const paramsContent = `// Auto-generated from frontend input
-export const brandNames = ${JSON.stringify(data.brandNames.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0))};
-export const brandWebsites = ${JSON.stringify(data.brandWebsites.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0))};
+export const brandNames = ${JSON.stringify(
+        data.brandNames
+          .split(',')
+          .map((s: string) => s.trim())
+          .filter((s: string) => s.length > 0)
+      )};
+export const brandWebsites = ${JSON.stringify(
+        data.brandWebsites
+          .split(',')
+          .map((s: string) => s.trim())
+          .filter((s: string) => s.length > 0)
+      )};
 export const productServices = '${data.productsServices}';
 export const targetRegions = '${data.targetRegions}';
-export const competitorBrands = ${JSON.stringify(data.competitorBrands.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0))};
+export const competitorBrands = ${JSON.stringify(
+        data.competitorBrands
+          .split(',')
+          .map((s: string) => s.trim())
+          .filter((s: string) => s.length > 0)
+      )};
 export const fileName = '${fileName}';
 `;
 
@@ -29,18 +44,21 @@ export const fileName = '${fileName}';
   },
 
   // Save questions to questions.txt file
-  async saveQuestionsToFile(questions: Question[]): Promise<void> {
+  async saveQuestionsToFile(questions: string[]): Promise<void> {
     try {
       // Convert questions to text format
-      const questionsText = questions
-        .map((q: Question) => q.question)
-        .join('\n');
+      const questionsText = questions.join('\n');
 
       // Save to questions.txt file
-      const questionsPath = path.join(__dirname, '../../playwright/questions.txt');
+      const questionsPath = path.join(
+        __dirname,
+        '../../playwright/questions.txt'
+      );
       await fs.writeFile(questionsPath, questionsText, 'utf-8');
-      
-      console.log(`✅ Successfully saved ${questions.length} questions to questions.txt`);
+
+      console.log(
+        `✅ Successfully saved ${questions.length} questions to questions.txt`
+      );
     } catch (error) {
       console.error('❌ Error saving questions to file:', error);
       throw error;
@@ -64,6 +82,11 @@ export const fileName = '${fileName}';
 
   // Validate CSV filename
   isValidCSVFilename(fileName: string): boolean {
-    return fileName && fileName.endsWith('.csv') && !fileName.includes('..') && !fileName.includes('/');
-  }
+    return (
+      !!fileName &&
+      fileName.endsWith('.csv') &&
+      !fileName.includes('..') &&
+      !fileName.includes('/')
+    );
+  },
 };

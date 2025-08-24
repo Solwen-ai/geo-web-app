@@ -1,6 +1,6 @@
 import { BrowserContext, Page } from 'playwright';
-import { OutputRecord, UserParams } from './types';
-import { delay } from './utils';
+import { OutputRecord, UserParams } from './types.js';
+import { delay } from './utils.js';
 
 const clearInput = async (page: Page) => {
   try {
@@ -19,8 +19,12 @@ const clearInput = async (page: Page) => {
     await delay(0.5);
 
     console.log('✅ Cleared input field');
-  } catch (error) {
-    console.log('⚠️ Could not clear input field:', error.message);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.log('⚠️ Could not clear input field:', error.message);
+    } else {
+      console.log('⚠️ Could not clear input field:', String(error));
+    }
   }
 };
 
@@ -190,7 +194,7 @@ const buildBrandPresenceMatrix = (
   return matrix;
 };
 
-const searchAndCopy = async ({
+const searchAndCopyGpt = async ({
   context,
   question,
   outputRecord,
@@ -250,10 +254,14 @@ const searchAndCopy = async ({
       params.competitorBrands
     );
     Object.assign(outputRecord, brandMatrix);
-  } catch (error) {
-    console.error('❌ Error:', error.message);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error('❌ Error:', error.message);
+    } else {
+      console.error('❌ Error:', String(error));
+    }
     throw error;
   }
 };
 
-export default searchAndCopy;
+export default searchAndCopyGpt;
