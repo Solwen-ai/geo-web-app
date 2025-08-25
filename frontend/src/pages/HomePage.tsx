@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { QuestionList } from '../components/QuestionList';
@@ -18,8 +18,55 @@ export const HomePage = () => {
 
   const [questions, setQuestions] = useState<string[]>([]);
   const [error, setError] = useState<string>('');
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { submitForm, initScraping } = useQuestions();
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Check file type by extension and MIME type
+    const fileName = file.name.toLowerCase();
+    const isCSV = fileName.endsWith('.csv') || file.type === 'text/csv';
+    const isTXT = fileName.endsWith('.txt') || file.type === 'text/plain';
+    
+    if (!isCSV && !isTXT) {
+      setError('只支援 CSV 和 TXT 檔案格式');
+      return;
+    }
+
+    setIsUploading(true);
+    setError('');
+
+    try {
+      const text = await file.text();
+      let lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+
+      // If it's a CSV file, skip the first row (header)
+      if (isCSV) {
+        lines = lines.slice(1);
+      }
+
+      if (lines.length === 0) {
+        setError('檔案中沒有找到有效的問題');
+        return;
+      }
+
+      setQuestions(lines);
+      console.log(`✅ 成功上傳 ${lines.length} 個問題`);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : '檔案讀取失敗';
+      setError(errorMessage);
+    } finally {
+      setIsUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,22 +236,54 @@ export const HomePage = () => {
               </div>
             )}
 
-            {/* Submit Button */}
-            <div className="flex justify-center">
-              <button
-                type="submit"
-                disabled={submitForm.isPending}
-                className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
-              >
-                {submitForm.isPending ? (
-                  <>
-                    <LoadingSpinner size="sm" />
-                    <span>生成中...</span>
-                  </>
-                ) : (
-                  <span>生成問題</span>
-                )}
-              </button>
+            {/* Submit Buttons */}
+            <div className="flex flex-col items-center space-y-4">
+              <div className="flex space-x-4">
+                <button
+                  type="submit"
+                  disabled={submitForm.isPending}
+                  className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                >
+                  {submitForm.isPending ? (
+                    <>
+                      <LoadingSpinner size="sm" />
+                      <span>生成中...</span>
+                    </>
+                  ) : (
+                    <span>生成問題</span>
+                  )}
+                </button>
+
+                <div className="relative">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv,.txt"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    disabled={isUploading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="px-8 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                  >
+                    {isUploading ? (
+                      <>
+                        <LoadingSpinner size="sm" />
+                        <span>上傳中...</span>
+                      </>
+                    ) : (
+                      <span>上傳問題</span>
+                    )}
+                  </button>
+                </div>
+              </div>
+              
+              <p className="text-sm text-gray-500 text-center">
+                支援 CSV 和 TXT 檔案格式。CSV 檔案第一行將被視為標題並自動跳過。
+              </p>
             </div>
           </form>
 

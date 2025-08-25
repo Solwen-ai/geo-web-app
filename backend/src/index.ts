@@ -27,7 +27,7 @@ app.use(
     origin:
       process.env.NODE_ENV === 'production'
         ? process.env.CORS_FRONTEND_IP
-        : ['*'],
+        : '*',
     credentials: true,
   })
 );

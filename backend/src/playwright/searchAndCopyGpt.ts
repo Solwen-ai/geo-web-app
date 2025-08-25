@@ -81,6 +81,8 @@ const copyAnswer = async (
     await page.locator(copyButtonSelector).click({ force: true });
     await delay(1);
     await page.locator(copyButtonSelector).click({ force: true });
+    await delay(1);
+    await page.locator(copyButtonSelector).click({ force: true });
 
     // Read the clipboard
     const clipboardText = await clipboard.read();
