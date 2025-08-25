@@ -73,12 +73,10 @@ const copyAnswer = async (
     });
 
     // Find and click the copy button
-    const copyButton = await page.locator(copyButtonSelector).first();
-    await copyButton.waitFor({ timeout: 10000 });
-    await copyButton.click();
+    await page.click(copyButtonSelector);
     await delay(1);
     // not sure why, but it's working fine when click twice...
-    await copyButton.click();
+    await page.click(copyButtonSelector);
 
     // Read the clipboard
     const clipboardText = await page.evaluate(async () => {
