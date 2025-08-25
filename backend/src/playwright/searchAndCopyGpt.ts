@@ -1,4 +1,5 @@
 import { BrowserContext, Page } from 'playwright';
+import clipboard from 'clipboardy';
 import { OutputRecord, UserParams } from './types.js';
 import { delay, logErrorAndScreenshot } from './utils.js';
 
@@ -20,7 +21,12 @@ const clearInput = async (page: Page) => {
 
     console.log('✅ Cleared input field');
   } catch (error: unknown) {
-    await logErrorAndScreenshot(page, 'clear-input', 'clear input field', error);
+    await logErrorAndScreenshot(
+      page,
+      'clear-input',
+      'clear input field',
+      error
+    );
     throw error;
   }
 };
@@ -37,7 +43,12 @@ const enableWebSearch = async (page: Page) => {
 
     console.log("✅ Typed '/search' to enable web search");
   } catch (error: unknown) {
-    await logErrorAndScreenshot(page, 'enable-web-search', 'enable web search', error);
+    await logErrorAndScreenshot(
+      page,
+      'enable-web-search',
+      'enable web search',
+      error
+    );
     throw error;
   }
 };
@@ -66,27 +77,23 @@ const copyAnswer = async (
     const copyButtonSelector =
       'article[data-testid="conversation-turn-2"] button[data-testid="copy-turn-action-button"]';
     await page.waitForSelector(copyButtonSelector, { timeout: 120000 });
-
-    // Scroll to the bottom to ensure buttons are visible
-    await page.evaluate(() => {
-      window.scrollTo(0, document.body.scrollHeight);
-    });
-
-    // Find and click the copy button
-    await page.click(copyButtonSelector);
+    await page.locator(copyButtonSelector).scrollIntoViewIfNeeded();
+    await page.locator(copyButtonSelector).click({ force: true });
     await delay(1);
-    // not sure why, but it's working fine when click twice...
-    await page.click(copyButtonSelector);
+    await page.locator(copyButtonSelector).click({ force: true });
 
     // Read the clipboard
-    const clipboardText = await page.evaluate(async () => {
-      return await navigator.clipboard.readText();
-    });
+    const clipboardText = await clipboard.read();
 
     console.log('✅ Copied answer from clipboard');
     return clipboardText;
   } catch (error: unknown) {
-    await logErrorAndScreenshot(page, 'copy-answer', 'copy answer from clipboard', error);
+    await logErrorAndScreenshot(
+      page,
+      'copy-answer',
+      'copy answer from clipboard',
+      error
+    );
     throw error;
   }
 };
@@ -210,7 +217,7 @@ const searchAndCopyGpt = async ({
   params: UserParams;
 }) => {
   const page = await context.newPage();
-  
+
   try {
     // 1. Navigate to ChatGPT
     await page.goto('https://chatgpt.com');
