@@ -1,7 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { OutputRecord } from './types.js';
-import { brandNames, competitorBrands } from './params.js';
 
 // Base headers (excluding dynamic brand columns)
 const baseHeaders = [
@@ -39,26 +38,18 @@ const baseHeaderTitles = [
 ];
 
 /**
- * Gets all unique brand names for CSV headers
- * @returns Array of all brand names
- */
-const getAllBrandNames = (): string[] => {
-  return [...brandNames, ...competitorBrands];
-};
-
-/**
  * Converts OutputRecord array to CSV format with dynamic brand columns
  * @param records Array of OutputRecord objects
  * @returns CSV string
  */
-export const convertToCSV = (records: OutputRecord[]): string => {
-  // Get all brand names for dynamic columns
-  const brandNames = getAllBrandNames();
-  
+export const convertToCSV = (
+  records: OutputRecord[],
+  brandNames: string[]
+): string => {
   // Combine base headers with brand columns
   const allHeaders = [...baseHeaders, ...brandNames];
   const allHeaderTitles = [...baseHeaderTitles, ...brandNames];
-  
+
   const csvRows = [allHeaderTitles.join(',')];
 
   records.forEach(record => {
@@ -82,7 +73,8 @@ export const convertToCSV = (records: OutputRecord[]): string => {
  */
 export const exportToCSV = async (
   records: OutputRecord[],
-  fileName: string = 'geo.csv'
+  fileName: string = 'geo.csv',
+  brandNames: string[]
 ): Promise<void> => {
   try {
     // Create reports directory if it doesn't exist
@@ -97,10 +89,10 @@ export const exportToCSV = async (
 
     // Create full file path in reports directory
     const filePath = path.join(reportsDir, fileName);
-    
-    const csvContent = convertToCSV(records);
+
+    const csvContent = convertToCSV(records, brandNames);
     await fs.writeFile(filePath, csvContent, 'utf-8');
-    
+
     console.log(
       `✅ Successfully exported ${records.length} records to ${filePath}`
     );
