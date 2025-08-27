@@ -61,6 +61,7 @@ geo-web-app/
 ### Root Level (Monorepo)
 ```bash
 pnpm dev              # Start both frontend and backend in development mode
+pnpm dev:host         # Start development servers with host binding (accessible from other devices)
 pnpm build            # Build all packages (types, frontend, backend)
 pnpm clean            # Clean build artifacts
 pnpm install:all      # Install all dependencies

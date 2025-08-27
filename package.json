@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "pnpm run --parallel dev",
+    "dev:host": "pnpm frontend:dev --host & pnpm backend:dev & pnpm types:dev",
     "build": "pnpm run --recursive build",
     "clean": "pnpm run --recursive clean",
     "install:all": "pnpm install",
