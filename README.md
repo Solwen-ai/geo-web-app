@@ -5,7 +5,7 @@ A modern monorepo application with React frontend and Express backend, featuring
 ## TODO
 1. awoo+阿物 use another separator
 1. Upload questions
-1. There should be only one ts typing
+1. ✅ There should be only one ts typing (RESOLVED - centralized in @geo-web-app/types)
 1. backend import should not include 'js'
 1. pnpm lock should be included in Dockerfile
 1. frontend .env should be assigned in docker-compose.yml
@@ -17,6 +17,8 @@ A modern monorepo application with React frontend and Express backend, featuring
 geo-web-app/
 ├── frontend/          # React + TypeScript + Vite + Tailwind CSS
 ├── backend/           # Express.js + TypeScript API server
+├── packages/
+│   └── types/         # Shared TypeScript types
 ├── package.json       # Root package.json with workspace configuration
 ├── pnpm-workspace.yaml # pnpm workspace configuration
 ├── .eslintrc.json    # Shared ESLint configuration
@@ -59,13 +61,15 @@ geo-web-app/
 ### Root Level (Monorepo)
 ```bash
 pnpm dev              # Start both frontend and backend in development mode
-pnpm build            # Build both frontend and backend
+pnpm build            # Build all packages (types, frontend, backend)
 pnpm clean            # Clean build artifacts
 pnpm install:all      # Install all dependencies
 pnpm frontend:dev     # Start only frontend development server
 pnpm backend:dev      # Start only backend development server
 pnpm frontend:build   # Build only frontend
 pnpm backend:build    # Build only backend
+pnpm types:build      # Build shared types package
+pnpm types:dev        # Watch shared types package for changes
 ```
 
 ### Frontend Scripts
@@ -85,6 +89,32 @@ pnpm start            # Start production server
 pnpm clean            # Clean build artifacts
 ```
 
+## 📝 Type Organization
+
+This monorepo uses a centralized type system to ensure consistency across all packages:
+
+### Shared Types Package (`@geo-web-app/types`)
+
+All shared TypeScript types are defined in the `packages/types` package and imported by both frontend and backend:
+
+- **Common Types** - Shared interfaces like `FormData`, `ApiError`
+- **API Types** - Request/response types for frontend-backend communication
+- **Playwright Types** - Types specific to web scraping operations
+
+### Benefits
+
+- **Type Safety** - Consistent types across the entire application
+- **Single Source of Truth** - No duplicate type definitions
+- **Better IDE Support** - Autocomplete and error detection across packages
+- **Easier Maintenance** - Update types in one place
+
+### Usage
+
+```typescript
+// Import shared types in any package
+import type { FormData, Report, UserParams } from '@geo-web-app/types';
+```
+
 ## 🛠️ Technology Stack
 
 ### Frontend
@@ -98,6 +128,10 @@ pnpm clean            # Clean build artifacts
 - **Node.js** - JavaScript runtime
 - **Express.js** - Web application framework
 - **TypeScript** - Type-safe JavaScript
+- **Playwright** - Browser automation for web scraping
+
+### Shared
+- **@geo-web-app/types** - Shared TypeScript types across all packages
 - **CORS** - Cross-origin resource sharing
 - **Helmet** - Security middleware
 - **Morgan** - HTTP request logger
