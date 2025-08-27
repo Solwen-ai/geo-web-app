@@ -40,15 +40,21 @@ const baseHeaderTitles = [
 /**
  * Converts OutputRecord array to CSV format with dynamic brand columns
  * @param records Array of OutputRecord objects
+ * @param brandNames Array of own brand names
+ * @param competitorBrands Array of competitor brand names
  * @returns CSV string
  */
 export const convertToCSV = (
   records: OutputRecord[],
-  brandNames: string[]
+  brandNames: string[],
+  competitorBrands: string[]
 ): string => {
+  // Create own brands column name
+  const ownBrandsColumnName = brandNames.join('+');
+  
   // Combine base headers with brand columns
-  const allHeaders = [...baseHeaders, ...brandNames];
-  const allHeaderTitles = [...baseHeaderTitles, ...brandNames];
+  const allHeaders = [...baseHeaders, ownBrandsColumnName, ...competitorBrands];
+  const allHeaderTitles = [...baseHeaderTitles, ownBrandsColumnName, ...competitorBrands];
 
   const csvRows = [allHeaderTitles.join(',')];
 
@@ -69,12 +75,15 @@ export const convertToCSV = (
  * Exports OutputRecord array to CSV file asynchronously
  * @param records Array of OutputRecord objects
  * @param fileName Name of the output CSV file (default: "geo.csv")
+ * @param brandNames Array of own brand names
+ * @param competitorBrands Array of competitor brand names
  * @returns Promise that resolves when file is written
  */
 export const exportToCSV = async (
   records: OutputRecord[],
   fileName: string = 'geo.csv',
-  brandNames: string[]
+  brandNames: string[],
+  competitorBrands: string[]
 ): Promise<void> => {
   try {
     // Create reports directory if it doesn't exist
@@ -90,7 +99,7 @@ export const exportToCSV = async (
     // Create full file path in reports directory
     const filePath = path.join(reportsDir, fileName);
 
-    const csvContent = convertToCSV(records, brandNames);
+    const csvContent = convertToCSV(records, brandNames, competitorBrands);
     await fs.writeFile(filePath, csvContent, 'utf-8');
 
     console.log(

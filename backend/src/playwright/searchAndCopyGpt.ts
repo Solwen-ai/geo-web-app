@@ -132,7 +132,9 @@ const extractChatgptReferences = (answerText: string): string => {
   return references.join('\n');
 };
 
-// Function to check brand existence in text (same as in searchAndCopyGoogle)
+
+
+// Function to check brand existence in text with support for both simple strings and + aliases
 const checkBrandExistenceInText = (
   text: string,
   brandNames: string[]
@@ -141,10 +143,22 @@ const checkBrandExistenceInText = (
     return 0;
   }
 
+  const textLower = text.toLowerCase();
+  
   let matchCount = 0;
-  for (const brandName of brandNames) {
-    if (text.toLowerCase().includes(brandName.toLowerCase())) {
-      matchCount++;
+  for (const brand of brandNames) {
+    if (brand.includes('+')) {
+      // Handle brands with aliases (e.g., "google+alphabet")
+      const brandAliases = brand.split('+').map(alias => alias.trim().toLowerCase());
+      const hasAnyAlias = brandAliases.some(alias => textLower.includes(alias));
+      if (hasAnyAlias) {
+        matchCount++;
+      }
+    } else {
+      // Handle simple brand names (e.g., "apple")
+      if (textLower.includes(brand.toLowerCase())) {
+        matchCount++;
+      }
     }
   }
 
@@ -195,11 +209,25 @@ const buildBrandPresenceMatrix = (
 
   // Check which brands appear in the answer text
   if (answerText) {
-    [...brandNames, ...competitorBrands].forEach(brand => {
-      if (answerText.toLowerCase().includes(brand.toLowerCase())) {
-        matrix[brand] = 1;
+    const textLower = answerText.toLowerCase();
+    
+    // Check own brands - combine into single column with joined brand names
+    const ownBrandsPresent = brandNames.some(brand => 
+      textLower.includes(brand.toLowerCase())
+    );
+    const ownBrandsColumnName = brandNames.join('+');
+    matrix[ownBrandsColumnName] = ownBrandsPresent ? 1 : 0;
+    
+    // Check competitor brands - handle both simple strings and + aliases
+    competitorBrands.forEach(brand => {
+      if (brand.includes('+')) {
+        // Handle brands with aliases (e.g., "google+alphabet")
+        const brandAliases = brand.split('+').map(alias => alias.trim().toLowerCase());
+        const hasAnyAlias = brandAliases.some(alias => textLower.includes(alias));
+        matrix[brand] = hasAnyAlias ? 1 : 0;
       } else {
-        matrix[brand] = 0;
+        // Handle simple brand names (e.g., "apple")
+        matrix[brand] = textLower.includes(brand.toLowerCase()) ? 1 : 0;
       }
     });
   }

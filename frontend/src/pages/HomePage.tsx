@@ -12,7 +12,7 @@ export const HomePage = () => {
     brandWebsites: 'welly.tw',
     productsServices: 'seo',
     targetRegions: 'taiwan',
-    competitorBrands: 'awoo,阿物,零一,ranking,mtmg',
+    competitorBrands: 'awoo+阿物,零一,ranking,mtmg',
     questionsCount: 2,
   });
 
@@ -197,11 +197,11 @@ export const HomePage = () => {
                       competitorBrands: e.target.value,
                     })
                   }
-                  placeholder="請輸入競爭對手品牌，用逗號分隔多個品牌"
+                  placeholder="請輸入競爭對手品牌，用逗號分隔多個品牌，用加號串聯同一個品牌不同名字"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <p className="text-sm text-gray-500">
-                  例如：零一行銷, Awoo 阿物科技, 集客數據行銷
+                  例如：零一行銷, Awoo+阿物, 集客數據行銷
                 </p>
               </div>
 

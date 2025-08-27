@@ -60,17 +60,32 @@ function convertToMarkdown(aiOverview: AiOverview): string {
   return markdown.trim();
 }
 
-// Function to count how many brand names exist in the AI overview text
+// Function to count how many brand names exist in the AI overview text with support for both simple strings and + aliases
 function checkBrandExistenceInText(text: string, brandNames: string[]): number {
   if (!text || !brandNames || brandNames.length === 0) {
     return 0;
   }
 
-  const lowerText = text.toLowerCase();
-  return brandNames.reduce((count, brand) => {
-    const lowerBrand = brand.toLowerCase().trim();
-    return lowerBrand && lowerText.includes(lowerBrand) ? count + 1 : count;
-  }, 0);
+  const textLower = text.toLowerCase();
+  
+  let matchCount = 0;
+  for (const brand of brandNames) {
+    if (brand.includes('+')) {
+      // Handle brands with aliases (e.g., "google+alphabet")
+      const brandAliases = brand.split('+').map(alias => alias.trim().toLowerCase());
+      const hasAnyAlias = brandAliases.some(alias => textLower.includes(alias));
+      if (hasAnyAlias) {
+        matchCount++;
+      }
+    } else {
+      // Handle simple brand names (e.g., "apple")
+      if (textLower.includes(brand.toLowerCase())) {
+        matchCount++;
+      }
+    }
+  }
+
+  return matchCount;
 }
 
 // Function to calculate aioBrandCompare

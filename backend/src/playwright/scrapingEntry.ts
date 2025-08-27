@@ -99,7 +99,7 @@ export async function scrapingEntry({ questions, params }: { questions: string[]
     console.log(
       `\n💾 Exporting ${outputRecords.length} records to ${params.fileName}...`
     );
-    await exportToCSV(outputRecords, params.fileName, [...params.brandNames, ...params.competitorBrands]);
+    await exportToCSV(outputRecords, params.fileName, params.brandNames, params.competitorBrands);
   } catch (error) {
     console.error('❌ Fatal error:', error);
   } finally {
