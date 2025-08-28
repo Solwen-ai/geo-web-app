@@ -7,6 +7,7 @@ export interface FormData {
   targetRegions: string;
   competitorBrands: string;
   questionsCount: number;
+  systemPrompt: string;
 }
 
 export interface ApiError {

@@ -4,6 +4,7 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { QuestionList } from '../components/QuestionList';
 import { useQuestions } from '../hooks/useQuestions';
 import type { FormData } from '../types/api';
+import { systemPrompt } from '../misc/index';
 
 export const HomePage = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ export const HomePage = () => {
     targetRegions: 'taiwan',
     competitorBrands: 'awoo+阿物,零一,ranking,mtmg',
     questionsCount: 2,
+    systemPrompt: systemPrompt,
   });
 
   const [questions, setQuestions] = useState<string[]>([]);
@@ -227,6 +229,25 @@ export const HomePage = () => {
                   建議：1-50 個問題
                 </p>
               </div>
+            </div>
+
+            {/* System Prompt */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">
+                系統提示詞
+              </label>
+              <textarea
+                value={formData.systemPrompt}
+                onChange={e =>
+                  setFormData({ ...formData, systemPrompt: e.target.value })
+                }
+                placeholder="請輸入系統提示詞"
+                rows={8}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
+              />
+              <p className="text-sm text-gray-500">
+                {'{'}VARIABLES{'}'} 勿做修改
+              </p>
             </div>
 
             {/* Error Message */}
