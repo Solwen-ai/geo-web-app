@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useReports } from '../hooks/useReports';
+import { useDownloadFile } from '../hooks/useDownloadFile';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import type { Report, SSEMessage } from '../types/api';
+import fileDownload from 'js-file-download';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -9,37 +11,41 @@ export const ReportPage = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [eventSource, setEventSource] = useState<EventSource | null>(null);
   const { data: reportsData, isLoading, error, refetch } = useReports();
+  const downloadMutation = useDownloadFile();
 
   const connectSSE = () => {
+    console.log('🔄 Connecting to SSE...');
+    
     // Close existing connection if any
     if (eventSource) {
+      console.log('🔌 Closing existing SSE connection');
       eventSource.close();
     }
 
     const newEventSource = new EventSource(`${API_BASE_URL}/api/sse`);
 
     newEventSource.onopen = () => {
-      console.log('SSE connection opened');
+      console.log('✅ SSE connection opened');
       setIsConnected(true);
     };
 
     newEventSource.onmessage = event => {
-      console.log('Received SSE message:', event.data);
+      console.log('📨 Received SSE message:', event.data);
       try {
         const data: SSEMessage = JSON.parse(event.data);
         
         // If we receive a report status update, refetch the reports
         if (data.type === 'report_status_update') {
-          console.log('Report status update received, refetching reports...');
+          console.log('🔄 Report status update received, refetching reports...');
           refetch();
         }
       } catch (error) {
-        console.error('Error parsing SSE message:', error);
+        console.error('❌ Error parsing SSE message:', error);
       }
     };
 
     newEventSource.onerror = error => {
-      console.error('SSE connection error:', error);
+      console.error('❌ SSE connection error:', error);
       setIsConnected(false);
     };
 
@@ -49,6 +55,7 @@ export const ReportPage = () => {
 
   const disconnectSSE = () => {
     if (eventSource) {
+      console.log('🔌 Manually disconnecting SSE');
       eventSource.close();
       setEventSource(null);
       setIsConnected(false);
@@ -222,13 +229,26 @@ export const ReportPage = () => {
                         </span>
                         
                         {report.status === 'completed' && (
-                          <a
-                            href={`${API_BASE_URL}/api/download/${report.fileName}`}
-                            download={report.fileName}
-                            className="inline-flex items-center px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+                          <button
+                            onClick={async (e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              
+                              try {
+                                console.log('📥 Starting download for:', report.fileName);
+                                const blob = await downloadMutation.mutateAsync(report.fileName);
+                                fileDownload(blob, report.fileName);
+                                console.log('✅ Download completed for:', report.fileName);
+                              } catch (error) {
+                                console.error('❌ Download error:', error);
+                                alert('下載失敗，請稍後再試');
+                              }
+                            }}
+                            disabled={downloadMutation.isPending}
+                            className="inline-flex items-center px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            📥 下載
-                          </a>
+                            {downloadMutation.isPending ? '⏳ 下載中...' : '📥 下載'}
+                          </button>
                         )}
                       </div>
                     </div>

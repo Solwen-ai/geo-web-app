@@ -61,4 +61,23 @@ export const apis = {
       } as ApiError;
     }
   },
+
+  async downloadFile(fileName: string): Promise<Blob> {
+    try {
+      const response = await api.get(`/api/download/${fileName}`, {
+        responseType: 'blob',
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw {
+          message: error.response?.data?.message || error.message,
+          status: error.response?.status,
+        } as ApiError;
+      }
+      throw {
+        message: 'An unexpected error occurred',
+      } as ApiError;
+    }
+  },
 }; 
