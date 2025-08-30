@@ -13,21 +13,21 @@ export class QueueService {
     this.startProcessing();
   }
 
-  async addJob(job: Omit<QueueJob, 'id' | 'createdAt' | 'status'>): Promise<string> {
-    const jobId = await this.storage.addJob(job);
+  async addJob(job: Omit<QueueJob, 'id' | 'createdAt' | 'status'>, jobId?: string): Promise<string> {
+    const finalJobId = await this.storage.addJob(job, jobId);
     
     // Notify SSE clients about new job
     reportService.notifySSEClients({
       type: 'queue_job_added',
-      jobId,
-      position: await this.getJobPosition(jobId),
+      jobId: finalJobId,
+      position: await this.getJobPosition(finalJobId),
       timestamp: new Date().toISOString()
     });
 
     // Trigger processing if not already running
     this.processNextJob();
     
-    return jobId;
+    return finalJobId;
   }
 
   async cancelJob(jobId: string): Promise<boolean> {
@@ -55,6 +55,8 @@ export class QueueService {
   async getJob(jobId: string): Promise<QueueJob | null> {
     return this.storage.getJob(jobId);
   }
+
+
 
   async getQueueStatus(): Promise<QueueStatus> {
     const allJobs = await this.storage.getAllJobs();

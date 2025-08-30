@@ -1,17 +1,48 @@
 import { useEffect, useState } from 'react';
 import { useReports } from '../hooks/useReports';
 import { useDownloadFile } from '../hooks/useDownloadFile';
+import { useQueueStatus, useCancelJob } from '../hooks/useQueue';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import type { Report, SSEMessage } from '../types/api';
 import fileDownload from 'js-file-download';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
+// Cancel Job Button Component
+const CancelJobButton = ({ reportId }: { reportId: string }) => {
+  const cancelJobMutation = useCancelJob();
+
+  return (
+    <button
+      onClick={async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (confirm('確定要取消這個任務嗎？')) {
+          try {
+            console.log('🚫 Cancelling job:', reportId);
+            await cancelJobMutation.mutateAsync(reportId);
+            console.log('✅ Job cancelled successfully');
+          } catch (error) {
+            console.error('❌ Cancel job error:', error);
+            alert('取消任務失敗，請稍後再試');
+          }
+        }
+      }}
+      disabled={cancelJobMutation.isPending}
+      className="inline-flex items-center px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {cancelJobMutation.isPending ? '⏳ 取消中...' : '❌ 取消'}
+    </button>
+  );
+};
+
 export const ReportPage = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [eventSource, setEventSource] = useState<EventSource | null>(null);
   const { data: reportsData, isLoading, error, refetch } = useReports();
   const downloadMutation = useDownloadFile();
+  const { data: queueStatus, refetch: refetchQueueStatus } = useQueueStatus();
 
   const connectSSE = () => {
     console.log('🔄 Connecting to SSE...');
@@ -38,6 +69,12 @@ export const ReportPage = () => {
         if (data.type === 'report_status_update') {
           console.log('🔄 Report status update received, refetching reports...');
           refetch();
+        }
+        
+        // If we receive a queue event, refetch the queue status
+        if (data.type.startsWith('queue_')) {
+          console.log('🔄 Queue event received, refetching queue status...');
+          refetchQueueStatus();
         }
       } catch (error) {
         console.error('❌ Error parsing SSE message:', error);
@@ -186,6 +223,27 @@ export const ReportPage = () => {
             </div>
           </div>
 
+          {/* Queue Status */}
+          {queueStatus && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <h2 className="text-lg font-semibold text-green-800 mb-3">隊列狀態</h2>
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-yellow-600">{queueStatus.pending}</div>
+                  <div className="text-yellow-700">等待中</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">{queueStatus.processing}</div>
+                  <div className="text-blue-700">處理中</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-600">{queueStatus.total}</div>
+                  <div className="text-gray-700">總計</div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Reports List */}
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-gray-800">
@@ -249,6 +307,10 @@ export const ReportPage = () => {
                           >
                             {downloadMutation.isPending ? '⏳ 下載中...' : '📥 下載'}
                           </button>
+                        )}
+                        
+                        {report.status === 'pending' && (
+                          <CancelJobButton reportId={report.id} />
                         )}
                       </div>
                     </div>

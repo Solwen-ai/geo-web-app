@@ -3,8 +3,8 @@ import type { QueueJob, QueueStorage } from '@geo-web-app/types';
 export class InMemoryQueueStorage implements QueueStorage {
   private jobs = new Map<string, QueueJob>();
 
-  async addJob(job: Omit<QueueJob, 'id' | 'createdAt' | 'status'>): Promise<string> {
-    const id = `job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  async addJob(job: Omit<QueueJob, 'id' | 'createdAt' | 'status'>, jobId?: string): Promise<string> {
+    const id = jobId || `job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const queueJob: QueueJob = {
       ...job,
       id,

@@ -36,7 +36,7 @@ export interface QueueJobResponse {
 }
 
 export interface QueueStorage {
-  addJob(job: Omit<QueueJob, 'id' | 'createdAt' | 'status'>): Promise<string>;
+  addJob(job: Omit<QueueJob, 'id' | 'createdAt' | 'status'>, jobId?: string): Promise<string>;
   getJob(jobId: string): Promise<QueueJob | null>;
   updateJobStatus(jobId: string, status: QueueJob['status'], error?: string): Promise<void>;
   getNextPendingJob(): Promise<QueueJob | null>;

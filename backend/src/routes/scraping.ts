@@ -44,7 +44,7 @@ router.post('/init', async (req: any, res: any) => {
       questions,
       params: { ...transformedParams, fileName: report.fileName },
       reportId: report.id,
-    });
+    }, report.id); // Use report ID as job ID
 
     console.log(`📋 Job added to queue: ${jobId}`);
 
