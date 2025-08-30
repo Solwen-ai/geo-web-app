@@ -29,13 +29,3 @@ export interface Report {
 export interface ReportsResponse extends TimestampedResponse {
   reports: Report[];
 }
-
-export interface SSEMessage {
-  type: string;
-  message?: string;
-  timestamp: string;
-  error?: string;
-  fileName?: string;
-  reportId?: string;
-  status?: Report['status'];
-}

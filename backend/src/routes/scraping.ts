@@ -1,6 +1,6 @@
 import { Router, type Router as ExpressRouter } from 'express';
 // import { fileService } from '../services/fileService.js';
-import { scrapingService } from '../services/scrapingService.js';
+import { queueService } from '../services/queueService.js';
 import type {
   InitScrapingRequest,
   InitScrapingResponse,
@@ -39,16 +39,14 @@ router.post('/init', async (req: any, res: any) => {
     // may not necessary to save questions to file
     // await fileService.saveQuestionsToFile(questions);
 
-    // Start scraping asynchronously (don't wait for it to complete)
-    scrapingService
-      .runScraping({
-        questions,
-        params: { ...transformedParams, fileName: report.fileName },
-        reportId: report.id,
-      })
-      .catch(error => {
-        console.error('❌ Background scraping failed:', error);
-      });
+    // Add job to queue instead of starting scraping directly
+    const jobId = await queueService.addJob({
+      questions,
+      params: { ...transformedParams, fileName: report.fileName },
+      reportId: report.id,
+    });
+
+    console.log(`📋 Job added to queue: ${jobId}`);
 
     return res.json({
       message: `Successfully saved ${questions.length} questions to questions.txt and started scraping process`,

@@ -10,6 +10,7 @@ import questionsRouter from './routes/questions.js';
 import scrapingRouter from './routes/scraping.js';
 import downloadRouter from './routes/download.js';
 import sseRouter from './routes/sse.js';
+import queueRouter from './routes/queue.js';
 
 // Import middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
@@ -50,6 +51,7 @@ app.use('/api/questions', questionsRouter);
 app.use('/api/scraping', scrapingRouter);
 app.use('/api/download', downloadRouter);
 app.use('/api/sse', sseRouter);
+app.use('/api/queue', queueRouter);
 
 // Error handling middleware
 app.use(errorHandler);
