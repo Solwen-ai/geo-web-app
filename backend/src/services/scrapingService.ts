@@ -25,7 +25,7 @@ export const scrapingService = {
       // Find the report to get the correct fileName
       reportService.updateReportStatus(reportId, 'completed');
 
-      console.log('✅ Playwright script executed successfully');
+      console.log('🟢 Playwright script executed successfully');
     } catch (error) {
       console.error('Error executing Playwright script:', error);
 

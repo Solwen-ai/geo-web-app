@@ -42,7 +42,6 @@ export const ReportPage = () => {
   const [eventSource, setEventSource] = useState<EventSource | null>(null);
   const { data: reportsData, isLoading, error, refetch } = useReports();
   const downloadMutation = useDownloadFile();
-  const { data: queueStatus, refetch: refetchQueueStatus } = useQueueStatus();
 
   const connectSSE = () => {
     console.log('🔄 Connecting to SSE...');
@@ -223,27 +222,6 @@ export const ReportPage = () => {
             </div>
           </div>
 
-          {/* Queue Status */}
-          {queueStatus && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <h2 className="text-lg font-semibold text-green-800 mb-3">隊列狀態</h2>
-              <div className="grid grid-cols-3 gap-4 text-sm">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-600">{queueStatus.pending}</div>
-                  <div className="text-yellow-700">等待中</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{queueStatus.processing}</div>
-                  <div className="text-blue-700">處理中</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-600">{queueStatus.total}</div>
-                  <div className="text-gray-700">總計</div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Reports List */}
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-gray-800">
@@ -309,9 +287,9 @@ export const ReportPage = () => {
                           </button>
                         )}
                         
-                        {report.status === 'pending' && (
+                        {/* {report.status === 'pending' && (
                           <CancelJobButton reportId={report.id} />
-                        )}
+                        )} */}
                       </div>
                     </div>
                     
