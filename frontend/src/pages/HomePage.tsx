@@ -20,7 +20,7 @@ export const HomePage = () => {
 
   const [questions, setQuestions] = useState<string[]>([]);
   const [error, setError] = useState<string>('');
-  const [isUploading, setIsUploading] = useState(false);
+  const [isUploaded, setIsUploaded] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { submitForm, initScraping } = useQuestions();
@@ -39,7 +39,6 @@ export const HomePage = () => {
       return;
     }
 
-    setIsUploading(true);
     setError('');
 
     try {
@@ -62,7 +61,7 @@ export const HomePage = () => {
       const errorMessage = err instanceof Error ? err.message : '檔案讀取失敗';
       setError(errorMessage);
     } finally {
-      setIsUploading(false);
+      setIsUploaded(true);
       // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -282,22 +281,13 @@ export const HomePage = () => {
                     accept=".csv,.txt"
                     onChange={handleFileUpload}
                     className="hidden"
-                    disabled={isUploading}
                   />
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
                     className="px-8 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
                   >
-                    {isUploading ? (
-                      <>
-                        <LoadingSpinner size="sm" />
-                        <span>上傳中...</span>
-                      </>
-                    ) : (
                       <span>上傳問題</span>
-                    )}
                   </button>
                 </div>
               </div>
@@ -305,6 +295,7 @@ export const HomePage = () => {
               <p className="text-sm text-gray-500 text-center">
                 支援 CSV 和 TXT 檔案格式。CSV 檔案第一行將被視為標題並自動跳過。
               </p>
+                {isUploaded && <p className="text-sm text-green-500">上傳成功！</p>}
             </div>
           </form>
 

@@ -1,7 +1,8 @@
 import type { QueueJob, QueueStatus, QueueStorage } from '@geo-web-app/types';
 import { scrapingService } from './scrapingService.js';
-import { reportService } from './reportService.js';
 import { InMemoryQueueStorage } from './inMemoryQueueStorage.js';
+import { eventBus } from './eventBus.js';
+import type { QueueEvent } from '../types/events.js';
 
 export class QueueService {
   private storage: QueueStorage;
@@ -16,13 +17,15 @@ export class QueueService {
   async addJob(job: Omit<QueueJob, 'id' | 'createdAt' | 'status'>, jobId?: string): Promise<string> {
     const finalJobId = await this.storage.addJob(job, jobId);
     
-    // Notify SSE clients about new job
-    reportService.notifySSEClients({
+    // Emit queue_job_added event
+    const event: QueueEvent = {
       type: 'queue_job_added',
       jobId: finalJobId,
+      reportId: job.reportId,
       position: await this.getJobPosition(finalJobId),
       timestamp: new Date().toISOString()
-    });
+    };
+    eventBus.emit('queue_job_added', event);
 
     // Trigger processing if not already running
     this.processNextJob();
@@ -39,12 +42,14 @@ export class QueueService {
     if (job.status === 'pending') {
       await this.storage.updateJobStatus(jobId, 'cancelled');
       
-      // Notify SSE clients about job cancellation
-      reportService.notifySSEClients({
+      // Emit queue_job_cancelled event
+      const event: QueueEvent = {
         type: 'queue_job_cancelled',
         jobId,
+        reportId: job.reportId,
         timestamp: new Date().toISOString()
-      });
+      };
+      eventBus.emit('queue_job_cancelled', event);
 
       return true;
     }
@@ -98,29 +103,32 @@ export class QueueService {
       // Update job status to processing
       await this.storage.updateJobStatus(nextJob.id, 'processing');
       
-      // Notify SSE clients about job starting
-      reportService.notifySSEClients({
+      // Emit queue_job_started event
+      const startedEvent: QueueEvent = {
         type: 'queue_job_started',
         jobId: nextJob.id,
+        reportId: nextJob.reportId,
         timestamp: new Date().toISOString()
-      });
+      };
+      eventBus.emit('queue_job_started', startedEvent);
 
       // Start the scraping process
       await scrapingService.runScraping({
         questions: nextJob.questions,
         params: nextJob.params,
-        reportId: nextJob.reportId,
       });
 
       // Update job status to completed
       await this.storage.updateJobStatus(nextJob.id, 'completed');
       
-      // Notify SSE clients about job completion
-      reportService.notifySSEClients({
+      // Emit queue_job_completed event
+      const completedEvent: QueueEvent = {
         type: 'queue_job_completed',
         jobId: nextJob.id,
+        reportId: nextJob.reportId,
         timestamp: new Date().toISOString()
-      });
+      };
+      eventBus.emit('queue_job_completed', completedEvent);
 
     } catch (error) {
       console.error('❌ Job processing failed:', error);
@@ -132,13 +140,15 @@ export class QueueService {
         error instanceof Error ? error.message : 'Unknown error'
       );
       
-      // Notify SSE clients about job failure
-      reportService.notifySSEClients({
+      // Emit queue_job_failed event
+      const failedEvent: QueueEvent = {
         type: 'queue_job_failed',
         jobId: nextJob.id,
+        reportId: nextJob.reportId,
         error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date().toISOString()
-      });
+      };
+      eventBus.emit('queue_job_failed', failedEvent);
     } finally {
       this.isProcessing = false;
       

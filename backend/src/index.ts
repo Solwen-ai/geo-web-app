@@ -15,8 +15,22 @@ import queueRouter from './routes/queue.js';
 // Import middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
+// Import event system
+import { eventBus } from './services/eventBus.js';
+import { ReportConsumer } from './services/consumers/reportConsumer.js';
+
 // Load environment variables
 dotenv.config();
+
+// Initialize event system
+const reportConsumer = new ReportConsumer();
+eventBus.subscribe('queue_job_added', reportConsumer);
+eventBus.subscribe('queue_job_cancelled', reportConsumer);
+eventBus.subscribe('queue_job_started', reportConsumer);
+eventBus.subscribe('queue_job_completed', reportConsumer);
+eventBus.subscribe('queue_job_failed', reportConsumer);
+
+console.log('📡 Event system initialized with ReportConsumer');
 
 const app = express();
 const PORT = process.env.PORT || 3001;

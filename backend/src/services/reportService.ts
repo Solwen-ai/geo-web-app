@@ -16,8 +16,18 @@ export const reportService = {
 
   // Create a new report
   createReport(): Report {
-    // Generate id & fileName
-    const fileName = `${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '')}.csv`;
+    // Generate fileName with date and sequential number
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD format
+    
+    // Count existing reports for today
+    const todayReports = Array.from(reports.values()).filter(report => 
+      report.fileName.startsWith(today)
+    );
+    
+    // Generate next report number (1, 2, 3, etc.)
+    const reportNumber = String(todayReports.length + 1);
+    const fileName = `${today}_${reportNumber}.csv`;
+    
     // TODO: should use uuid
     const id = `report_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const now = new Date().toISOString();
@@ -44,15 +54,6 @@ export const reportService = {
         report.error = error;
       }
       reports.set(reportId, report);
-      
-      // Notify SSE clients about the status update
-      this.notifySSEClients({
-        type: 'report_status_update',
-        reportId,
-        status,
-        error,
-        timestamp: new Date().toISOString()
-      });
     }
   },
 

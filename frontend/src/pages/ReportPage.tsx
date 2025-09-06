@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useReports } from '../hooks/useReports';
 import { useDownloadFile } from '../hooks/useDownloadFile';
-import { useQueueStatus, useCancelJob } from '../hooks/useQueue';
+import { useCancelJob } from '../hooks/useQueue';
 import { LoadingSpinner } from '../components/LoadingSpinner';
-import type { Report, SSEMessage } from '../types/api';
+import type { Report } from '../types/api';
 import fileDownload from 'js-file-download';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -30,7 +30,7 @@ const CancelJobButton = ({ reportId }: { reportId: string }) => {
         }
       }}
       disabled={cancelJobMutation.isPending}
-      className="inline-flex items-center px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      className="inline-flex items-center px-3 py-1 bg-red-300 text-white text-sm rounded hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {cancelJobMutation.isPending ? '⏳ 取消中...' : '❌ 取消'}
     </button>
@@ -62,19 +62,18 @@ export const ReportPage = () => {
     newEventSource.onmessage = event => {
       console.log('📨 Received SSE message:', event.data);
       try {
-        const data: SSEMessage = JSON.parse(event.data);
-        
+        // Parse the message to validate it's valid JSON
+        const data = JSON.parse(event.data);
+
         // If we receive a report status update, refetch the reports
-        if (data.type === 'report_status_update') {
+        if (data.type.startsWith('queue_')) {
           console.log('🔄 Report status update received, refetching reports...');
           refetch();
         }
         
-        // If we receive a queue event, refetch the queue status
-        if (data.type.startsWith('queue_')) {
-          console.log('🔄 Queue event received, refetching queue status...');
-          refetchQueueStatus();
-        }
+        // Refetch reports whenever we receive any SSE notification
+        console.log('🔄 SSE event received, refetching reports...');
+        refetch();
       } catch (error) {
         console.error('❌ Error parsing SSE message:', error);
       }
@@ -121,6 +120,8 @@ export const ReportPage = () => {
         return 'bg-green-100 text-green-800 border-green-200';
       case 'failed':
         return 'bg-red-100 text-red-800 border-red-200';
+      case 'cancelled':
+        return 'bg-gray-100 text-gray-800 border-gray-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
@@ -136,6 +137,8 @@ export const ReportPage = () => {
         return '已完成';
       case 'failed':
         return '失敗';
+      case 'cancelled':
+        return '已取消';
       default:
         return '未知';
     }
@@ -151,6 +154,8 @@ export const ReportPage = () => {
         return '✅';
       case 'failed':
         return '❌';
+      case 'cancelled':
+        return '🚫';
       default:
         return '❓';
     }
@@ -287,9 +292,9 @@ export const ReportPage = () => {
                           </button>
                         )}
                         
-                        {/* {report.status === 'pending' && (
+                        {(report.status === 'pending') && (
                           <CancelJobButton reportId={report.id} />
-                        )} */}
+                        )}
                       </div>
                     </div>
                     

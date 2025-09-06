@@ -20,7 +20,7 @@ export interface InitScrapingResponse extends TimestampedResponse {
 export interface Report {
   id: string;
   fileName: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
   createdAt: string;
   updatedAt: string;
   error?: string;
