@@ -184,7 +184,7 @@ const calculateChatgptBrandCompare = (
   );
   const matchCount = brandNamesCount + competitorBrandsCount;
 
-  return matchCount >= 2;
+  return matchCount >= 1;
 };
 
 // Function to calculate chatgptBrandExist (same as aioBrandExist)

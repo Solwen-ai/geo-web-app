@@ -108,7 +108,7 @@ function calculateAioBrandCompare(
   );
   const matchCount = brandNamesCount + competitorBrandsCount;
 
-  return matchCount >= 2;
+  return matchCount >= 1;
 }
 
 // Function to calculate aioBrandExist
