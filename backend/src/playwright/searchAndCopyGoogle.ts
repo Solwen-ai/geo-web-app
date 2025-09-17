@@ -147,6 +147,9 @@ async function getSerpApiResult(
       if (result.error) {
         throw new Error(`SerpAPI error: ${result.error}`);
       }
+      logger.info('getSerpApiResult', '✅ Found google result', {
+        result,
+      });
 
       return result;
     });
@@ -164,6 +167,7 @@ async function getSerpApiResult(
         if (result.error) {
           throw new Error(`SerpAPI pagination error: ${result.error}`);
         }
+        logger.info('getSerpApiResult', '✅ Found AIO result', { result });
 
         return result;
       });
@@ -231,9 +235,13 @@ const searchAndCopyGoogle = async ({
     }
   } catch (error: unknown) {
     if (error instanceof Error) {
-      logger.error('searchAndCopyGoogle', '❌ Error in Google search', { error: error.message });
+      logger.error('searchAndCopyGoogle', '❌ Error in Google search', {
+        error: error.message,
+      });
     } else {
-      logger.error('searchAndCopyGoogle', '❌ Error in Google search', { error: String(error) });
+      logger.error('searchAndCopyGoogle', '❌ Error in Google search', {
+        error: String(error),
+      });
     }
     outputRecord.aio = 'Error during Google search: ' + error.message;
   }

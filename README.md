@@ -3,12 +3,8 @@
 A modern monorepo application with React frontend and Express backend, featuring Tailwind CSS for styling.
 
 ## TODO
-1. awoo+阿物 use another separator
-1. Upload questions
-1. ✅ There should be only one ts typing (RESOLVED - centralized in @geo-web-app/types)
-1. backend import should not include 'js'
-1. pnpm lock should be included in Dockerfile
-1. frontend .env should be assigned in docker-compose.yml
+1. install logger
+1. more log when calling serpapi 
 
 
 ## 🏗️ Project Structure
@@ -203,24 +199,23 @@ NODE_ENV=development         # Environment (development/production)
 VITE_API_URL=http://localhost:3001  # Backend API URL
 ```
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the ISC License.
-
-## 🆘 Support
-
-If you encounter any issues or have questions, please:
-1. Check the existing issues
-2. Create a new issue with detailed information
-3. Include your Node.js and pnpm versions
+## Setup Environment in Linux Ubuntu
+1. sudo apt upgrade
+2. sudo apt install xubuntu-core -y
+3. sudo apt install lightdm -y
+4. sudo systemctl set-default graphical.target
+5. sudo apt install xrdp -y
+6. systemctl status xrdp
+7. sudo adduser xrdp ssl-cert
+8. sudo passwd ubuntu
+9. echo "startxfce4" | sudo tee /home/ubuntu/.xsession
+10. curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+11. source ~/.bashrc
+12. nvm install 20
+13. corepack enable
+14. cd backend/
+15. pnpm exec playwright install-deps
+16. pnpm exec playwright install
 
 ---
 
