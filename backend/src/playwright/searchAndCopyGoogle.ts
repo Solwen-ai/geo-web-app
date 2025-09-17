@@ -137,8 +137,7 @@ async function getSerpApiResult(
       const result = await getJson({
         q: query,
         api_key: process.env.SERPAPI_KEY,
-        location_requested: 'Taipei, Taiwan',
-        location_used: 'Taipei,Taiwan',
+        location: 'Taiwan',
         google_domain: 'google.com.tw',
         hl: 'zh-tw',
         gl: 'tw',
