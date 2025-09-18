@@ -20,6 +20,8 @@ export async function scrapingEntry({ questions, params }: { questions: string[]
     no: index + 1,
     query: '',
     aio: '',
+    aioOfficialWebsiteExist: '',
+    aioReference: '',
     aioBrandCompare: '',
     aioBrandExist: '',
     chatgpt: '',

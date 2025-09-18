@@ -127,6 +127,35 @@ function calculateAioBrandExist(
   return checkBrandExistenceInText(aiOverviewText, brandNames) > 0;
 }
 
+// Function to check if official website exists in AI overview text
+// Returns '有' if any brand website is mentioned, otherwise '無'
+function calculateAioOfficialWebsiteExist(
+  aiOverviewReference: string,
+  brandWebsites: string[]
+): string {
+  if (!aiOverviewReference) {
+    return '無';
+  }
+
+  return brandWebsites.some(website =>
+    aiOverviewReference.toLowerCase().includes(website.toLowerCase())
+  ) ? '有' : '無';
+}
+
+// Function to format AI overview references
+// Returns formatted references as [1]www.reference.com, [2]www.reference2.com
+function formatAioReferences(aiOverview: AiOverview): string {
+  if (!aiOverview || !aiOverview.references || aiOverview.references.length === 0) {
+    return '';
+  }
+
+  return aiOverview.references
+    .map((ref, index) => {
+      return `[${index + 1}]${ref.link}`;
+    })
+    .join('\n');
+}
+
 // Make SerpAPI call with pagination handling and retry mechanism
 async function getSerpApiResult(
   query: string
@@ -207,6 +236,11 @@ const searchAndCopyGoogle = async ({
         markdownContent,
       });
       outputRecord.aio = markdownContent;
+      outputRecord.aioReference = formatAioReferences(result.ai_overview);
+      outputRecord.aioOfficialWebsiteExist = calculateAioOfficialWebsiteExist(
+        outputRecord.aioReference,
+        params.brandWebsites
+      );
       outputRecord.aioBrandCompare = calculateAioBrandCompare(
         markdownContent,
         params.brandNames,
@@ -226,6 +260,8 @@ const searchAndCopyGoogle = async ({
       });
     } else {
       outputRecord.aio = 'No AI overview found';
+      outputRecord.aioOfficialWebsiteExist = '無';
+      outputRecord.aioReference = '';
       outputRecord.aioBrandCompare = '否';
       outputRecord.aioBrandExist = '無';
       logger.info('searchAndCopyGoogle', '⚠️ No AI overview available', {
@@ -242,7 +278,11 @@ const searchAndCopyGoogle = async ({
         error: String(error),
       });
     }
-    outputRecord.aio = 'Error during Google search: ' + error.message;
+    outputRecord.aio = 'No AI overview found';
+    outputRecord.aioOfficialWebsiteExist = '無';
+    outputRecord.aioReference = '';
+    outputRecord.aioBrandCompare = '否';
+    outputRecord.aioBrandExist = '無';
   }
 };
 

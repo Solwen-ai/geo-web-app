@@ -14,6 +14,8 @@ export type OutputRecord = {
   no: number;
   query: string;
   aio: string;
+  aioOfficialWebsiteExist: string;
+  aioReference: string;
   aioBrandCompare: string;
   aioBrandExist: string;
   chatgpt: string;
