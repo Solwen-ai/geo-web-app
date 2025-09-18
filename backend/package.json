@@ -11,7 +11,8 @@
     "clean": "rm -rf dist",
     "grab": "npx --yes tsx src/playwright/grabTheThings.ts",
     "manual": "npx --yes tsx src/playwright/login.ts",
-    "serpapi": "npx --yes tsx src/playwright/serpapi.js"
+    "serpapi": "npx --yes tsx src/playwright/serpapi.js",
+    "openai": "npx --yes tsx src/playwright/openaiQuery.ts"
   },
   "keywords": [
     "api",

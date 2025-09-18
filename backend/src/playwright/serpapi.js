@@ -5,12 +5,10 @@ getJson(
   {
     // q: '請問在台灣有哪些券商提供線上交易平台？',
     // q: '請問有哪些台灣的券商提供外匯交易服務？',
-    q: '請問在台灣有哪些券商提供線上交易平台？',
+    q: '哪些多益補習班有提供一對一輔導，可以針對個人弱點加強訓練？',
     api_key: process.env.SERPAPI_KEY,
 
     engine: 'google',
-    // location_requested: 'Taipei, Taiwan',
-    // location_used: 'Taipei,Taiwan',
     location: 'Taiwan',
     google_domain: 'google.com.tw',
     hl: 'zh-tw',
