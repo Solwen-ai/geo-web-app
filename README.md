@@ -42,7 +42,14 @@ geo-web-app/
    pnpm install
    ```
 
-3. **Start development servers**
+3. **Install playwright dependencies**
+    ```bash
+    cd frontend/
+    pnpm exec playwright install-deps
+    pnpm exec playwright install
+    ```
+
+4. **Start development servers**
    ```bash
    # Start both frontend and backend concurrently
    pnpm dev
