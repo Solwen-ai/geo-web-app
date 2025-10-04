@@ -37,8 +37,10 @@ const enableWebSearch = async (page: Page) => {
     await page.waitForSelector(inputSelector, { timeout: 15000 });
     await page.click(inputSelector);
     await page.type(inputSelector, '/search', { delay: 50 });
-    // wait for Web Search option to show up
-    await delay(1);
+    
+    // Wait for the search dropdown to appear with the specific element
+    const searchOptionSelector = 'div.popover div[role="group"] div[data-highlighted=""] span:has-text("Search")';
+    await page.waitForSelector(searchOptionSelector, { timeout: 10000 });
     await page.keyboard.press('Enter');
 
     console.log("✅ Typed '/search' to enable web search");
@@ -275,7 +277,7 @@ const searchAndCopyGpt = async ({
 
   try {
     // 1. Navigate to ChatGPT
-    await page.goto('https://chatgpt.com');
+    await page.goto('https://chatgpt.com/?temporary-chat=true');
 
     // 1.5. Clear input field to ensure it's empty
     await clearInput(page);
