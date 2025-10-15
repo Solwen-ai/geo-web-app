@@ -175,12 +175,18 @@ async function getSerpApiResult(
       if (result.error) {
         throw new Error(`SerpAPI error: ${result.error}`);
       }
+
+      if (!result.ai_overview) {
+        // try again if ai_overview is not found
+        throw new Error('AI overview not found in first call getJson');
+      }
+
       logger.info('getSerpApiResult', '✅ Found google result', {
         result,
       });
 
       return result;
-    });
+    }, 5);
 
     // Check if ai_overview needs pagination
     if (json.ai_overview && json.ai_overview.page_token) {
@@ -198,7 +204,7 @@ async function getSerpApiResult(
         logger.info('getSerpApiResult', '✅ Found AIO result', { result });
 
         return result;
-      });
+      }, 5);
 
       return paginationJson;
     }
