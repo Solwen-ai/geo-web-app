@@ -2,6 +2,7 @@ import { BrowserContext, Page } from 'playwright';
 import clipboard from 'clipboardy';
 import { OutputRecord, UserParams } from './types.js';
 import { delay, logErrorAndScreenshot, retryWithBackoff } from './utils.js';
+import { logger } from '../utils/logger.js';
 
 const clearInput = async (page: Page) => {
   try {
@@ -19,7 +20,7 @@ const clearInput = async (page: Page) => {
     await page.keyboard.press('Backspace');
     await delay(0.5);
 
-    console.log('✅ Cleared input field');
+    logger.info('clearInput', '✅ Cleared input field');
   } catch (error: unknown) {
     await logErrorAndScreenshot(
       page,
@@ -43,7 +44,7 @@ const enableWebSearch = async (page: Page) => {
     await page.waitForSelector(searchOptionSelector, { timeout: 10000 });
     await page.keyboard.press('Enter');
 
-    console.log("✅ Typed '/search' to enable web search");
+    logger.info('enableWebSearch', "✅ Typed '/search' to enable web search");
   } catch (error: unknown) {
     await logErrorAndScreenshot(
       page,
@@ -63,7 +64,7 @@ const askQuestion = async (page: Page, question: string) => {
     await page.type(inputSelector, question, { delay: 100 });
     await page.keyboard.press('Enter');
 
-    console.log('✅ Asked question:', question.substring(0, 50) + '...');
+    logger.info('askQuestion', '✅ Asked question', { question: question.substring(0, 50) + '...' });
   } catch (error: unknown) {
     await logErrorAndScreenshot(page, 'ask-question', question, error);
     throw error;
@@ -101,7 +102,7 @@ const copyAnswer = async (
         
         // If clipboard content has changed, return the new content
         if (currentClipboardText !== previousClipboardContent) {
-          console.log('✅ Clipboard content changed successfully');
+          logger.info('copyAnswer', '✅ Clipboard content changed successfully');
           return currentClipboardText;
         }
         
@@ -111,12 +112,13 @@ const copyAnswer = async (
     } catch (error) {
       // If all retries failed, assign fallback message
       clipboardText = 'not able to copy result';
-      console.log('⚠️ Clipboard content unchanged after retries');
+      logger.warn('copyAnswer', '⚠️ Clipboard content unchanged after retries');
     }
 
-    console.log('✅ Copied answer from clipboard');
+    logger.info('copyAnswer', '✅ Copied answer from clipboard');
     return clipboardText;
   } catch (error: unknown) {
+    logger.error('copyAnswer', '❌ Failed to copy answer from clipboard', { error });
     await logErrorAndScreenshot(
       page,
       'copy-answer',
@@ -324,7 +326,6 @@ const searchAndCopyGpt = async ({
     Object.assign(outputRecord, brandMatrix);
   } catch (error: unknown) {
     await logErrorAndScreenshot(page, 'chatgpt', question, error);
-    throw error;
   } finally {
     await page.close();
   }

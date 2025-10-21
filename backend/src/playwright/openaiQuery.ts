@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { logger } from '../utils/logger.js';
 
 interface OpenAIOptions {
   model?: string;
@@ -38,10 +39,11 @@ export async function queryOpenAI(
   }
 
   try {
-    console.log('🤖 Querying OpenAI API...');
-    console.log('📝 Query:', query);
-    console.log('⚙️  Model:', model);
-    console.log('🌡️  Temperature:', temperature);
+    logger.info('queryOpenAI', '🤖 Querying OpenAI API...', { 
+      query, 
+      model, 
+      temperature 
+    });
 
     const messages: Array<{ role: string; content: string }> = [];
     
@@ -73,12 +75,13 @@ export async function queryOpenAI(
     const data: OpenAIResponse = await response.json();
     const result = data.choices[0]?.message?.content || '';
 
-    console.log('✅ OpenAI API response received');
-    console.log('📄 Response length:', result.length, 'characters');
+    logger.info('queryOpenAI', '✅ OpenAI API response received', { 
+      responseLength: result.length 
+    });
     
     return result;
   } catch (error) {
-    console.error('❌ Error querying OpenAI API:', error);
+    logger.error('queryOpenAI', '❌ Error querying OpenAI API', { error });
     throw error;
   }
 }
@@ -91,6 +94,7 @@ async function main() {
   const args = process.argv.slice(2);
   
   if (args.length === 0) {
+    // Keep console.log for CLI usage instructions (user-facing)
     console.log('Usage: npx tsx src/playwright/openaiQuery.ts "Your query here"');
     console.log('Example: npx tsx src/playwright/openaiQuery.ts "What are the best practices for web scraping?"');
     process.exit(1);
@@ -100,6 +104,7 @@ async function main() {
   
   try {
     const response = await queryOpenAI(query);
+    // Keep console.log for CLI output (user-facing)
     console.log('\n🎯 OpenAI Response:');
     console.log('=' .repeat(50));
     console.log(response);

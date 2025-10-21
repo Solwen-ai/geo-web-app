@@ -5,13 +5,14 @@ import searchAndCopyGoogle from './searchAndCopyGoogle.js';
 import { OutputRecord, UserParams } from './types.js';
 import { exportToCSV } from './csvExporter.js';
 import { delay } from './utils.js';
+import { logger } from '../utils/logger.js';
 
 // Add stealth plugin
 chromium.use(StealthPlugin());
 
 export async function scrapingEntry({ questions, params }: { questions: string[], params: UserParams }) {
   if (questions.length === 0) {
-    console.error('❌ No questions found, exiting...');
+    logger.error('scrapingEntry', '❌ No questions found, exiting...');
     return;
   }
 
@@ -59,10 +60,9 @@ export async function scrapingEntry({ questions, params }: { questions: string[]
       const outputRecord = outputRecords[i]!;
       outputRecord.query = question;
 
-      console.log(
-        `\n🔄 Processing question ${i + 1}/${ questions.length
-        }: ${question.substring(0, 50)}...`
-      );
+      logger.info('scrapingEntry', `🔄 Processing question ${i + 1}/${questions.length}`, {
+        question: question.substring(0, 50) + '...'
+      });
 
       try {
         await searchAndCopyGpt({ 
@@ -72,7 +72,7 @@ export async function scrapingEntry({ questions, params }: { questions: string[]
           params,
         });
         
-        console.log(`✅ Completed ChatGPT for question ${i + 1}`);
+        logger.info('scrapingEntry', `✅ Completed ChatGPT for question ${i + 1}`);
 
         // Call Google search right after ChatGPT
         await searchAndCopyGoogle({
@@ -81,7 +81,7 @@ export async function scrapingEntry({ questions, params }: { questions: string[]
           params,
         });
 
-        console.log(`✅ Completed Google search for question ${i + 1}`);
+        logger.info('scrapingEntry', `✅ Completed Google search for question ${i + 1}`);
 
         // Add a small delay between requests to avoid rate limiting
         if (i < questions.length - 1) {
@@ -89,21 +89,19 @@ export async function scrapingEntry({ questions, params }: { questions: string[]
         }
       } catch (error: unknown) {
         if (error instanceof Error) {
-          console.error(`❌ Error processing question ${i + 1}:`, error.message);
+          logger.error('scrapingEntry', `❌ Error processing question ${i + 1}`, { error: error.message });
         } else {
-          console.error(`❌ Error processing question ${i + 1}:`, String(error));
+          logger.error('scrapingEntry', `❌ Error processing question ${i + 1}`, { error: String(error) });
         }
         // Continue with next question instead of stopping
       }
     }
 
     // Export to CSV
-    console.log(
-      `\n💾 Exporting ${outputRecords.length} records to ${params.fileName}...`
-    );
+    logger.info('scrapingEntry', `💾 Exporting ${outputRecords.length} records to ${params.fileName}...`);
     await exportToCSV(outputRecords, params.fileName, params.brandNames, params.competitorBrands);
   } catch (error) {
-    console.error('❌ Fatal error:', error);
+    logger.error('scrapingEntry', '❌ Fatal error', { error });
   } finally {
     await context.close();
   }

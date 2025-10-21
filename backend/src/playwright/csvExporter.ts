@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { OutputRecord } from './types.js';
+import { logger } from '../utils/logger.js';
 
 // Base headers (excluding dynamic brand columns)
 const baseHeaders = [
@@ -97,7 +98,7 @@ export const exportToCSV = async (
     } catch {
       // Directory doesn't exist, create it
       await fs.mkdir(reportsDir, { recursive: true });
-      console.log('📁 Created reports directory');
+      logger.info('exportToCSV', '📁 Created reports directory');
     }
 
     // Create full file path in reports directory
@@ -106,11 +107,9 @@ export const exportToCSV = async (
     const csvContent = convertToCSV(records, brandNames, competitorBrands);
     await fs.writeFile(filePath, csvContent, 'utf-8');
 
-    console.log(
-      `✅ Successfully exported ${records.length} records to ${filePath}`
-    );
+    logger.info('exportToCSV', `✅ Successfully exported ${records.length} records to ${filePath}`);
   } catch (error) {
-    console.error(`❌ Error exporting to CSV:`, error);
+    logger.error('exportToCSV', '❌ Error exporting to CSV', { error });
     throw error;
   }
 };
