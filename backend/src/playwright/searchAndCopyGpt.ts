@@ -161,6 +161,17 @@ const extractChatgptReferences = (answerText: string): string => {
   return references.join('\n');
 };
 
+// Function to remove references from answerText to get clean text for metrics calculation
+const removeReferencesFromText = (answerText: string): string => {
+  if (!answerText) {
+    return '';
+  }
+
+  // Remove reference patterns like [1]: https://... "title"
+  const referenceRegex = /\[\d+\]:\s*(https?:\/\/[^\s]+)\s*"([^"]+)"/g;
+  return answerText.replace(referenceRegex, '').trim();
+};
+
 
 
 // Function to check brand existence in text with support for both simple strings and + aliases
@@ -294,32 +305,37 @@ const searchAndCopyGpt = async ({
     const answerText = await copyAnswer(page, context);
     outputRecord.chatgpt = answerText;
 
-    // 5. Fill in the additional properties
+    // 5. Process and extract references first
+    outputRecord.chatgptReference = extractChatgptReferences(answerText);
+    
+    // 6. Remove references from answerText to get clean text for metrics calculation
+    const cleanedAnswerText = removeReferencesFromText(answerText);
+
+    // 7. Fill in the additional properties using cleaned text
     outputRecord.chatgptOfficialWebsiteExist = checkChatgptOfficialWebsiteExist(
-      answerText,
+      cleanedAnswerText,
       params.brandWebsites
     )
       ? '有'
       : '無';
-    outputRecord.chatgptReference = extractChatgptReferences(answerText);
     outputRecord.chatgptBrandCompare = calculateChatgptBrandCompare(
-      answerText,
+      cleanedAnswerText,
       params.brandNames,
       params.competitorBrands
     )
       ? '是'
       : '否';
     outputRecord.chatgptBrandExist = calculateChatgptBrandExist(
-      answerText,
+      cleanedAnswerText,
       params.brandNames
     )
       ? '有'
       : '無';
     outputRecord.answerEngine = 'ChatGPT 5 + search';
 
-    // 6. Build and assign brand presence matrix
+    // 8. Build and assign brand presence matrix using cleaned text
     const brandMatrix = buildBrandPresenceMatrix(
-      answerText,
+      cleanedAnswerText,
       params.brandNames,
       params.competitorBrands
     );
