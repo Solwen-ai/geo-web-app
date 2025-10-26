@@ -289,20 +289,31 @@ const searchAndCopyGpt = async ({
   const page = await context.newPage();
 
   try {
-    // 1. Navigate to ChatGPT
-    await page.goto('https://chatgpt.com/?temporary-chat=true');
+    // Wrap steps 1-4 in retry logic to handle failures and restart from beginning
+    const answerText = await retryWithBackoff(async () => {
+      // 1. Navigate to ChatGPT
+      await page.goto('https://chatgpt.com/?temporary-chat=true');
 
-    // 1.5. Clear input field to ensure it's empty
-    await clearInput(page);
+      // 1.5. Clear input field to ensure it's empty
+      await clearInput(page);
 
-    // 2. Enable web search
-    await enableWebSearch(page);
+      // 2. Enable web search
+      await enableWebSearch(page);
 
-    // 3. Ask the question
-    await askQuestion(page, question);
+      // 3. Ask the question
+      await askQuestion(page, question);
 
-    // 4. Copy the answer
-    const answerText = await copyAnswer(page, context);
+      // 4. Copy the answer
+      const result = await copyAnswer(page, context);
+      
+      // Validate that we got a meaningful answer
+      if (!result || result.trim() === '' || result === 'not able to copy result') {
+        throw new Error('Failed to get valid answer text');
+      }
+      
+      return result;
+    }, 3); // Retry up to 3 times with 2 second delay
+
     outputRecord.chatgpt = answerText;
 
     // 5. Process and extract references first
