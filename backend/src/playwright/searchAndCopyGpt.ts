@@ -314,8 +314,6 @@ const searchAndCopyGpt = async ({
       return result;
     }, 3); // Retry up to 3 times with 2 second delay
 
-    outputRecord.chatgpt = answerText;
-
     // 5. Process and extract references first
     outputRecord.chatgptReference = extractChatgptReferences(answerText);
     
@@ -323,6 +321,7 @@ const searchAndCopyGpt = async ({
     const cleanedAnswerText = removeReferencesFromText(answerText);
 
     // 7. Fill in the additional properties using cleaned text
+    outputRecord.chatgpt = cleanedAnswerText;
     outputRecord.chatgptOfficialWebsiteExist = checkChatgptOfficialWebsiteExist(
       cleanedAnswerText,
       params.brandWebsites
