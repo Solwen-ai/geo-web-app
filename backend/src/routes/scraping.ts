@@ -31,7 +31,19 @@ router.post('/init', async (req: any, res: any) => {
     }
 
     // Create a new report entry
-    const report = reportService.createReport();
+    // brandNames and productServices could be null or empty
+    const brandName = transformedParams.brandNames?.[0] ?? '';
+    const productServices = transformedParams.productServices ?? '';
+    // may not be necessary if productServices is empty
+    let fileNameKeyword = '';
+    if (brandName && productServices) {
+      fileNameKeyword = brandName + '_' + productServices;
+    } else if (brandName) {
+      fileNameKeyword = brandName;
+    } else if (productServices) {
+      fileNameKeyword = productServices;
+    }
+    const report = reportService.createReport(fileNameKeyword);
     console.log(
       `📝 Created report entry: ${report.id} with fileName: ${report.fileName}`
     );

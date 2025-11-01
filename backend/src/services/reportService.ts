@@ -15,7 +15,7 @@ export const reportService = {
   },
 
   // Create a new report
-  createReport(): Report {
+  createReport(fileNameKeyword?: string): Report {
     // Generate fileName with date and sequential number
     const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD format
     
@@ -26,10 +26,10 @@ export const reportService = {
     
     // Generate next report number (1, 2, 3, etc.)
     const reportNumber = String(todayReports.length + 1);
-    const fileName = `${today}_${reportNumber}.csv`;
+    const fileName = `${today}_${reportNumber}${fileNameKeyword ? `_${fileNameKeyword}` : ''}.csv`;
     
     // TODO: should use uuid
-    const id = `report_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = `report_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
     const now = new Date().toISOString();
     
     const report: Report = {
