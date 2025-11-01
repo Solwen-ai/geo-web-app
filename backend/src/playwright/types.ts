@@ -1,6 +1,7 @@
 // Re-export playwright types from shared package
 export type {
   UserParams,
+  BaseOutputRecord,
   OutputRecord,
   Video,
   ListItem,

@@ -10,7 +10,8 @@ export type UserParams = {
   fileName: string;
 }
 
-export type OutputRecord = {
+export type BaseOutputRecord = {
+  input: string;
   no: number;
   query: string;
   aio: string;
@@ -18,16 +19,19 @@ export type OutputRecord = {
   aioReference: string;
   aioBrandCompare: string;
   aioBrandExist: string;
+  aioBrandRelated: string;
   chatgpt: string;
   chatgptOfficialWebsiteExist: string;
   chatgptReference: string;
   chatgptBrandCompare: string;
   chatgptBrandExist: string;
-  brandRelated: string;
+  chatgptBrandRelated: string;
   contentAnalysis: string;
   optimizeDirection: string;
   answerEngine: string;
-  // Dynamic brand presence properties will be added here
+};
+
+export type OutputRecord = BaseOutputRecord & {
   [key: string]: any; // Allow dynamic brand properties
 };
 

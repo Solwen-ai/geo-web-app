@@ -10,7 +10,13 @@ import { logger } from '../utils/logger.js';
 // Add stealth plugin
 chromium.use(StealthPlugin());
 
-export async function scrapingEntry({ questions, params }: { questions: string[], params: UserParams }) {
+export async function scrapingEntry({
+  questions,
+  params,
+}: {
+  questions: string[];
+  params: UserParams;
+}) {
   if (questions.length === 0) {
     logger.error('scrapingEntry', '❌ No questions found, exiting...');
     return;
@@ -18,6 +24,7 @@ export async function scrapingEntry({ questions, params }: { questions: string[]
 
   // Initialize outputRecords array
   const outputRecords: OutputRecord[] = questions.map((_, index) => ({
+    input: '',
     no: index + 1,
     query: '',
     aio: '',
@@ -25,12 +32,13 @@ export async function scrapingEntry({ questions, params }: { questions: string[]
     aioReference: '',
     aioBrandCompare: '',
     aioBrandExist: '',
+    aioBrandRelated: '',
     chatgpt: '',
     chatgptOfficialWebsiteExist: '',
     chatgptReference: '',
     chatgptBrandCompare: '',
     chatgptBrandExist: '',
-    brandRelated: '',
+    chatgptBrandRelated: '',
     contentAnalysis: '',
     optimizeDirection: '',
     answerEngine: '',
@@ -58,21 +66,31 @@ export async function scrapingEntry({ questions, params }: { questions: string[]
     for (let i = 0; i < questions.length; i++) {
       const question = questions[i]!;
       const outputRecord = outputRecords[i]!;
+      if (i === 0) {
+        outputRecord.input = JSON.stringify(params, null, 2);
+      }
       outputRecord.query = question;
 
-      logger.info('scrapingEntry', `🔄 Processing question ${i + 1}/${questions.length}`, {
-        question: question.substring(0, 50) + '...'
-      });
+      logger.info(
+        'scrapingEntry',
+        `🔄 Processing question ${i + 1}/${questions.length}`,
+        {
+          question: question.substring(0, 50) + '...',
+        }
+      );
 
       try {
-        await searchAndCopyGpt({ 
-          context, 
-          question, 
+        await searchAndCopyGpt({
+          context,
+          question,
           outputRecord,
           params,
         });
-        
-        logger.info('scrapingEntry', `✅ Completed ChatGPT for question ${i + 1}`);
+
+        logger.info(
+          'scrapingEntry',
+          `✅ Completed ChatGPT for question ${i + 1}`
+        );
 
         // Call Google search right after ChatGPT
         await searchAndCopyGoogle({
@@ -81,7 +99,10 @@ export async function scrapingEntry({ questions, params }: { questions: string[]
           params,
         });
 
-        logger.info('scrapingEntry', `✅ Completed Google search for question ${i + 1}`);
+        logger.info(
+          'scrapingEntry',
+          `✅ Completed Google search for question ${i + 1}`
+        );
 
         // Add a small delay between requests to avoid rate limiting
         if (i < questions.length - 1) {
@@ -89,17 +110,33 @@ export async function scrapingEntry({ questions, params }: { questions: string[]
         }
       } catch (error: unknown) {
         if (error instanceof Error) {
-          logger.error('scrapingEntry', `❌ Error processing question ${i + 1}`, { error: error.message });
+          logger.error(
+            'scrapingEntry',
+            `❌ Error processing question ${i + 1}`,
+            { error: error.message }
+          );
         } else {
-          logger.error('scrapingEntry', `❌ Error processing question ${i + 1}`, { error: String(error) });
+          logger.error(
+            'scrapingEntry',
+            `❌ Error processing question ${i + 1}`,
+            { error: String(error) }
+          );
         }
         // Continue with next question instead of stopping
       }
     }
 
     // Export to CSV
-    logger.info('scrapingEntry', `💾 Exporting ${outputRecords.length} records to ${params.fileName}...`);
-    await exportToCSV(outputRecords, params.fileName, params.brandNames, params.competitorBrands);
+    logger.info(
+      'scrapingEntry',
+      `💾 Exporting ${outputRecords.length} records to ${params.fileName}...`
+    );
+    await exportToCSV(
+      outputRecords,
+      params.fileName,
+      params.brandNames,
+      params.competitorBrands
+    );
   } catch (error) {
     logger.error('scrapingEntry', '❌ Fatal error', { error });
   } finally {

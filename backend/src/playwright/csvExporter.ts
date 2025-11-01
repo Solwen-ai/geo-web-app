@@ -1,10 +1,11 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { OutputRecord } from './types.js';
+import { BaseOutputRecord } from './types.js';
 import { logger } from '../utils/logger.js';
 
 // Base headers (excluding dynamic brand columns)
-const baseHeaders = [
+const baseHeaders: readonly (keyof BaseOutputRecord)[] = [
+  'input',
   'no',
   'query',
   'aio',
@@ -12,31 +13,34 @@ const baseHeaders = [
   'aioReference',
   'aioBrandCompare',
   'aioBrandExist',
+  'aioBrandRelated',
   'chatgpt',
   'chatgptOfficialWebsiteExist',
   'chatgptReference',
   'chatgptBrandCompare',
   'chatgptBrandExist',
-  'brandRelated',
+  'chatgptBrandRelated',
   'contentAnalysis',
   'optimizeDirection',
   'answerEngine',
-];
+]
 
 const baseHeaderTitles = [
+  'INPUT',
   'NO.',
   'QUERY',
-  'AIO（僅一部分有）',
-  '有無官網',
-  '引用的資料',
-  '品牌比較',
-  '有無品牌',
+  'AIO 回覆內容',
+  'AIO 有無官網',
+  'AIO 引用的資料',
+  'AIO 品牌比較',
+  'AIO 有無品牌',
+  'AIO 品牌相關',
   'ChatGPT 回覆內容',
-  '有無官網',
-  '引用的資料',
-  '品牌比較',
-  '有無品牌',
-  '品牌相關',
+  'ChatGPT 有無官網',
+  'ChatGPT 引用的資料',
+  'ChatGPT 品牌比較',
+  'ChatGPT 有無品牌',
+  'ChatGPT 品牌相關',
   '內容分析',
   '優化方向',
   'ANSWER ENGINE',
