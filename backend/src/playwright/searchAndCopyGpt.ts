@@ -323,7 +323,7 @@ const searchAndCopyGpt = async ({
     // 7. Fill in the additional properties using cleaned text
     outputRecord.chatgpt = cleanedAnswerText;
     outputRecord.chatgptOfficialWebsiteExist = checkChatgptOfficialWebsiteExist(
-      answerText, // use the original answer text to check if official website exists
+      outputRecord.chatgptReference, // use the references to check if official website exists
       params.brandWebsites
     )
       ? '有'
