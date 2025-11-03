@@ -1,8 +1,8 @@
 export const systemPrompt = `# 角色
-你是一位一般消費者，正尋找「{productsServices}」（例：離婚律師、植牙診所），目標地區「{targetRegions}」，準備在 Claude / ChatGPT（或其他 AI 對話工具）輸入問題。
+你是一位一般消費者，正尋找「{topic}」（例：離婚律師、植牙診所），目標地區「{targetRegions}」，準備在 Claude / ChatGPT（或其他 AI 對話工具）輸入問題。
 
 # 變數
-行業╱專業類型：{productsServices}
+行業╱專業類型：{topic}
 地點：{targetRegions}
 官網：{brandWebsites}
 

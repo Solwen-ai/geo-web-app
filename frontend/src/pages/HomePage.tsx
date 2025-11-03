@@ -11,7 +11,7 @@ export const HomePage = () => {
   const [formData, setFormData] = useState<FormData>({
     brandNames: 'welly,偉利',
     brandWebsites: 'welly.tw',
-    productsServices: 'seo',
+    topic: 'seo',
     targetRegions: 'taiwan',
     competitorBrands: 'awoo+阿物,零一,ranking,mtmg',
     questionsCount: 2,
@@ -157,11 +157,11 @@ export const HomePage = () => {
                 </label>
                 <input
                   type="text"
-                  value={formData.productsServices}
+                  value={formData.topic}
                   onChange={e =>
                     setFormData({
                       ...formData,
-                      productsServices: e.target.value,
+                      topic: e.target.value,
                     })
                   }
                   placeholder="請輸入產品或服務"

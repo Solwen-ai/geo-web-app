@@ -18,7 +18,7 @@ router.post('/init', async (req: any, res: any) => {
     const transformedParams = {
       brandNames: params.brandNames.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0),
       brandWebsites: params.brandWebsites.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0),
-      productServices: params.productsServices,
+      topic: params.topic,
       targetRegions: params.targetRegions,
       competitorBrands: params.competitorBrands.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0),
       questionCount: params.questionsCount,
@@ -31,17 +31,17 @@ router.post('/init', async (req: any, res: any) => {
     }
 
     // Create a new report entry
-    // brandNames and productServices could be null or empty
+    // brandNames and topic could be null or empty
     const brandName = transformedParams.brandNames?.[0] ?? '';
-    const productServices = transformedParams.productServices ?? '';
-    // may not be necessary if productServices is empty
+    const topic = transformedParams.topic ?? '';
+    // may not be necessary if topic is empty
     let fileNameKeyword = '';
-    if (brandName && productServices) {
-      fileNameKeyword = brandName + '_' + productServices;
+    if (brandName && topic) {
+      fileNameKeyword = brandName + '_' + topic;
     } else if (brandName) {
       fileNameKeyword = brandName;
-    } else if (productServices) {
-      fileNameKeyword = productServices;
+    } else if (topic) {
+      fileNameKeyword = topic;
     }
     const report = reportService.createReport(fileNameKeyword);
     console.log(

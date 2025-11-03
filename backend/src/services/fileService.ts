@@ -23,7 +23,7 @@ export const brandWebsites = ${JSON.stringify(
           .map((s: string) => s.trim())
           .filter((s: string) => s.length > 0)
       )};
-export const productServices = '${data.productsServices}';
+export const topic = '${data.topic}';
 export const targetRegions = '${data.targetRegions}';
 export const competitorBrands = ${JSON.stringify(
         data.competitorBrands

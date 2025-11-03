@@ -3,7 +3,7 @@
 export type UserParams = {
   brandNames: string[];
   brandWebsites: string[];
-  productServices: string;
+  topic: string;
   targetRegions: string;
   competitorBrands: string[];
   questionCount: number;

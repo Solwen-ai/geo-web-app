@@ -3,7 +3,7 @@
 export interface FormData {
   brandNames: string;
   brandWebsites: string;
-  productsServices: string;
+  topic: string;
   targetRegions: string;
   competitorBrands: string;
   questionsCount: number;
