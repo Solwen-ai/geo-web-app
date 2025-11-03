@@ -27,7 +27,9 @@ router.get('/:fileName', async (req, res) => {
     
     // Set headers for file download
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    // Use RFC 5987 encoding for non-ASCII filenames (Chinese characters)
+    const encodedFileName = encodeURIComponent(fileName);
+    res.setHeader('Content-Disposition', `attachment; filename="${encodedFileName}"; filename*=UTF-8''${encodedFileName}`);
     
     // Stream the file to the response
     const fileStream = await fileService.readFile(filePath);
